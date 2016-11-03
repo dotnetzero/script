@@ -33,7 +33,7 @@ if($UseDefaults -eq $false){
     $addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
 }
 
-Write-Host -ForegroundColor Green "`r`n###################################################"
+Write-Host -ForegroundColor Green "###################################################"
 Write-Host -ForegroundColor Green "source code directory: $srcPath"
 Write-Host -ForegroundColor Green "build output directory: $artifactsPath"
 Write-Host -ForegroundColor Green "tools directory: $toolsPath"
@@ -43,7 +43,7 @@ Write-Host -ForegroundColor Green "Add CI task: $addCITask"
 Write-Host -ForegroundColor Green "###################################################"
 
 @($srcPath, $artifactsPath), $toolsPath | % {
-    New-Item -Force -ItemType Directory -Path $_
+    New-Item -Force -ItemType Directory -Path $_ | Out-Null
 }
 
 $scriptProperties = @"
@@ -170,6 +170,6 @@ using System.Runtime.InteropServices;
 }
 "@
 
-New-Item -ItemType File -Path $buildScript -Value $scriptProperties -Force
-Add-Content -Path $buildScript -Value $scriptTasks -Encoding Ascii
-Add-Content -Path $buildScript -Value $scriptFunctions -Encoding Ascii
+New-Item -ItemType File -Path $buildScript -Value $scriptProperties -Force | Out-Null
+Add-Content -Path $buildScript -Value $scriptTasks -Encoding Ascii | Out-Null
+Add-Content -Path $buildScript -Value $scriptFunctions -Encoding Ascii | Out-Null
