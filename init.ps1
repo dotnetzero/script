@@ -56,12 +56,17 @@ Write-Host -ForegroundColor Green "#############################################
 }
 
 $bootstrapscriptContent = @"
-
 param(
     `$taskList=@('Default'),
     `$version="1.0.0",
     [switch]`$runOctoPack
 )
+
+`$nugetPath = ".\src\.nuget\"
+if((Test-Path -Path "`$nugetPath\nuget.exe") -eq `$false){
+    New-Item -ItemType Directory -Path `$nugetPath -Force | Out-Null
+    Invoke-WebRequest -Uri "https://www.nuget.org/nuget.exe" -OutFile "`$nugetPath\nuget.exe" | Out-Null
+}
 
 `$psakePath = ".\tools\psake\4.6.0\psake.psm1"
 if((Test-Path -Path `$psakePath) -eq `$false){

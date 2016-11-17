@@ -1,2 +1,5 @@
 .vscode
 default.ps1
+run.ps1
+src/
+tools/
