@@ -41,11 +41,11 @@ if($UseDefaults -eq $false){
 }
 
 Write-Host -ForegroundColor Green "###################################################"
-Write-Host -ForegroundColor Green "source code directory: $srcPath"
-Write-Host -ForegroundColor Green "build output directory: $artifactsPath"
-Write-Host -ForegroundColor Green "tools directory: $toolsPath"
-Write-Host -ForegroundColor Green "build script default: $buildScript"
-Write-Host -ForegroundColor Green "Add nuget package restore task: $enableNugetPackageRestore"
+Write-Host -ForegroundColor Green "Source Code Directory: $srcPath"
+Write-Host -ForegroundColor Green "Build output Directory: $artifactsPath"
+Write-Host -ForegroundColor Green "Tools Directory: $toolsPath"
+Write-Host -ForegroundColor Green "Build Script Default: $buildScript"
+Write-Host -ForegroundColor Green "Add Nuget Package Restore Task: $enableNugetPackageRestore"
 Write-Host -ForegroundColor Green "Add CI task: $addCITask"
 Write-Host -ForegroundColor Green "Add TC message functions: $enableTeamCityTaskNameLogging"
 Write-Host -ForegroundColor Green "###################################################"
@@ -194,8 +194,8 @@ TaskTearDown{
 "@
 
 New-Item -ItemType File -Path $buildScript -Value $scriptProperties -Force | Out-Null
-Add-Content -Path $buildScript -Value $scriptTasks -Encoding Ascii | Out-Null
-Add-Content -Path $buildScript -Value $scriptFunctions -Encoding Ascii | Out-Null
+Add-Content -Path $buildScript -Value $scriptTasks -Encoding Ascii -NoNewline | Out-Null
+Add-Content -Path $buildScript -Value $scriptFunctions -Encoding Ascii -NoNewline | Out-Null
 
 if($enableTeamCityTaskNameLogging){
     Add-Content -Path $buildScript -Value $taskSetupAndTearDownFunctions -Encoding Ascii -NoNewline | Out-Null
