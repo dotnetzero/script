@@ -1,5 +1,6 @@
 param(
     [switch]$UseDefaults,
+    $bootstrapscript = "run.ps1",
     $companyName = "",
     $productName = "",
     $srcPath = "src",
@@ -53,6 +54,35 @@ Write-Host -ForegroundColor Green "#############################################
 @($srcPath, $artifactsPath), $toolsPath | % {
     New-Item -Force -ItemType Directory -Path $_ | Out-Null
 }
+
+$bootstrapscriptContent = @"
+
+param(
+    `$taskList=@('Default'),
+    `$version="1.0.0",
+    [switch]`$runOctoPack
+)
+
+`$psakePath = ".\tools\psake\4.6.0\psake.psm1"
+if((Test-Path -Path `$psakePath) -eq `$false){
+    Write-Host "Psake module missing"
+    Write-Host "Updating package provider"
+    Install-PackageProvider NuGet -Force
+    Write-Host "Seaching for psake package and saving local copy"
+    Find-Module -Name psake | Save-Module -Path .\tools\ -Force
+}
+
+`# '[p]sake' is the same as 'psake' but  is not polluted
+Remove-Module [p]sake
+Import-Module `$psakePath
+
+# call default.ps1 with properties
+Invoke-Psake -buildFile ".\default.ps1" -taskList `$taskList -properties @{ "version" = `$version; "runOctoPack" = `$runOctoPack; }
+
+if(`$psake.build_success) { exit 0 } else { exit 1 }
+"@
+
+New-Item -ItemType File -Path $bootstrapscript -Value $bootstrapscriptContent -Force | Out-Null
 
 $scriptProperties = @"
 # Script properties
@@ -109,10 +139,7 @@ task Clean {
 }
 
 task Init {
-    Assert ("Debug", "Release" -contains `$buildConfiguration) `
-        "Invalid build configuration '`$buildConfiguration'. Valid values are 'Debug' or 'Release'"
-
-    Assert(Test-Path `$nugetExe) "Nuget command line tool is missing at `$nugetExe"
+    Assert(Test-Path `$nugetExe) -failureMessage "Nuget command line tool is missing at `$nugetExe"
 
     Write-Host "Creating build output directory at `$outputDirectory"
     CreateDirectory `$outputDirectory
