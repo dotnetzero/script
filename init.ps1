@@ -7,7 +7,8 @@ param(
     $artifactsPath = "artifacts",
     $buildScript = "default.ps1",
     $addCITask = $true,
-    $enableNugetPackageRestore = $true
+    $enableNugetPackageRestore = $true,
+    $enableTeamCityTaskNameLogging = $true
 )
 
 function Get-StringValue([string]$title, [string]$message, [string]$default) {
@@ -36,6 +37,7 @@ if($UseDefaults -eq $false){
     $buildScript = Get-StringValue -title "Build Script" -message "Select Name" -default $buildScript
     $enableNugetPackageRestore = Get-BooleanValue -title "Package Restore" -message "Add nuget package restore task" -default $enableNugetPackageRestore
     $addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
+    $enableTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -message "Add TeamCity task messages" -default $enableTeamCityTaskNameLogging
 }
 
 Write-Host -ForegroundColor Green "###################################################"
@@ -45,6 +47,7 @@ Write-Host -ForegroundColor Green "tools directory: $toolsPath"
 Write-Host -ForegroundColor Green "build script default: $buildScript"
 Write-Host -ForegroundColor Green "Add nuget package restore task: $enableNugetPackageRestore"
 Write-Host -ForegroundColor Green "Add CI task: $addCITask"
+Write-Host -ForegroundColor Green "Add TC message functions: $enableTeamCityTaskNameLogging"
 Write-Host -ForegroundColor Green "###################################################"
 
 @($srcPath, $artifactsPath), $toolsPath | % {
@@ -175,6 +178,25 @@ using System.Runtime.InteropServices;
 }
 "@
 
+$taskSetupAndTearDownFunctions = @"
+
+TaskSetup{
+    if(`$env:TEAMCITY_VERSION){
+        Write-Output "##teamcity[blockOpened name='$taskName']"
+    }
+}
+
+TaskTearDown{
+    if(`$env:TEAMCITY_VERSION){
+        Write-Output "##teamcity[blockClosed name='$taskName']"
+    }
+}
+"@
+
 New-Item -ItemType File -Path $buildScript -Value $scriptProperties -Force | Out-Null
 Add-Content -Path $buildScript -Value $scriptTasks -Encoding Ascii | Out-Null
 Add-Content -Path $buildScript -Value $scriptFunctions -Encoding Ascii | Out-Null
+
+if($enableTeamCityTaskNameLogging){
+    Add-Content -Path $buildScript -Value $taskSetupAndTearDownFunctions -Encoding Ascii -NoNewline | Out-Null
+}
