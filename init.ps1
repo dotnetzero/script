@@ -9,7 +9,8 @@ param(
 )
 
 function Get-StringValue([string]$title, [string]$message, [string]$default) {
-    $r = $host.ui.Prompt($title,$message,"(default $default)")
+    $prompt = if([string]::IsNullOrWhiteSpace($default)){ "(default blank)" } else { "(default $default)" }
+    $r = $host.ui.Prompt($title,$message,$prompt)
     $result =  if($r.Values[0].Equals("")){$r.Values[0]}else{$default}
     return $result
 }
