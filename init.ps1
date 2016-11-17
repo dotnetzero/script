@@ -1,5 +1,7 @@
 param(
     [switch]$UseDefaults,
+    $companyName = "",
+    $productName = "",
     $srcPath = "src",
     $toolsPath = "tools",
     $artifactsPath = "artifacts",
@@ -26,6 +28,8 @@ function Get-BooleanValue([string]$title, [string]$message, [boolean]$default) {
 }
 
 if($UseDefaults -eq $false){
+    $companyName = Get-StringValue -title "Company Info" -message "Select Name" -default $companyName
+    $productName = Get-StringValue -title "Product Info" -message "Select Name" -default $productName
     $srcPath = Get-StringValue -title "Source Code" -message "Select Directory" -default $srcPath
     $artifactsPath = Get-StringValue -title "Build Output" -message "Select Directory" -default $artifactsPath
     $toolsPath = Get-StringValue -title "Tools" -message "Select Directory" -default $toolsPath
@@ -54,8 +58,8 @@ properties {
     `$baseDirectory = Resolve-Path .\
     `$sourceDirectory = "`$baseDirectory\$srcPath"
 
-    `$company = ""
-    `$product = ""
+    `$company = "\$companyName"
+    `$product = "$productName"
 
     `$outputDirectory = "`$baseDirectory\$artifactsPath"
     `$packagesDirectory = "`$sourceDirectory\packages"
