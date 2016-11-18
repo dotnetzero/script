@@ -64,6 +64,7 @@ param(
 
 `$nugetPath = ".\src\.nuget\"
 if((Test-Path -Path "`$nugetPath\nuget.exe") -eq `$false){
+    Write-Host "Downloading nuget to `$nugetPath"
     New-Item -ItemType Directory -Path `$nugetPath -Force | Out-Null
     Invoke-WebRequest -Uri "https://www.nuget.org/nuget.exe" -OutFile "`$nugetPath\nuget.exe" | Out-Null
 }
@@ -74,7 +75,9 @@ if((Test-Path -Path `$psakePath) -eq `$false){
     Write-Host "Updating package provider"
     Install-PackageProvider NuGet -Force
     Write-Host "Seaching for psake package and saving local copy"
-    Find-Module -Name psake | Save-Module -Path .\tools\ -Force
+    `$module = Find-Module -Name psake
+    Write-Host "Psake module found. Saving local copy"
+    `$module | Save-Module -Path .\tools\ -Force
 }
 
 `# '[p]sake' is the same as 'psake' but  is not polluted
