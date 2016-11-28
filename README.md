@@ -29,9 +29,9 @@ init.ps1 takes some CLI observations from NPM and attempts to setup a initialize
 ## Installing
 
 ``` powershell
-Invoke-WebRequest https://raw.githubusercontent.com/motowilliams/psake-surgeon/master/init.ps1 -UseBasicParsing | Invoke-Expression
+Invoke-WebRequest https://raw.githubusercontent.com/psakezero/script/master/init.ps1 -UseBasicParsing | Invoke-Expression
 ```
 
 ``` powershell
-iwr https://raw.githubusercontent.com/motowilliams/psake-surgeon/master/init.ps1 -UseBasicParsing | iex
+iwr https://raw.githubusercontent.com/psakezero/script/master/init.ps1 -UseBasicParsing | iex
 ```
