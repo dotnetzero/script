@@ -1,0 +1,3 @@
+task UnitTests -depends Compile {
+
+}

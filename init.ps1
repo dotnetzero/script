@@ -1,5 +1,4 @@
 param(
-    [switch]$UseDefaults,
     $bootstrapscript = "run.ps1" ,
     $companyName = "" ,
     $productName = "" ,
@@ -7,19 +6,36 @@ param(
     $toolsPath = "tools" ,
     $artifactsPath = "artifacts" ,
     $buildScript = "default.ps1" ,
-    [switch]$addDefaultTask ,
-    [switch]$addCITask ,
-    [switch]$addNugetPackageRestore ,
-    [switch]$addTeamCityTaskNameLogging ,
-    [switch]$addOctopack ,
-    [switch]$addUnitTests,
-    [switch]$addRebuildDatabase
+    [boolean]$addDefaultTask = $true,
+    [boolean]$addCITask = $true,
+    [boolean]$addNugetPackageRestore = $true,
+    [boolean]$addTeamCityTaskNameLogging = $true,
+    [boolean]$addOctopack = $true,
+    [boolean]$addUnitTests = $true,
+    [boolean]$addRebuildDatabase = $true,
+    [string]$branch = "master"
 )
 
 function Get-StringValue([string]$title, [string]$message, [string]$default) {
-    $prompt = if([string]::IsNullOrWhiteSpace($default)){ "(default blank)" } else { "(default $default)" }
-    $r = $host.ui.Prompt($title,$message,$prompt)
-    $result =  if($r.Values[0].Equals("")){$r.Values[0]}else{$default}
+    $key = if([string]::IsNullOrWhiteSpace($default)){ "(default blank)" } else { "(default $default)" }
+    $result = ""
+
+    do {
+        $r = $host.ui.Prompt($title,$message,$key)
+        $hasValue = $r[$key].Length -gt 0
+        Write-Host "HasValue $hasValue"
+
+        $result = if($hasValue){
+            $r[$key]
+        }else{
+            $default
+        }
+
+        if($result.Length -eq 0) {
+            Write-Host "Please supply a value" -ForegroundColor Yellow
+        }
+    } while ($result.Length -eq 0)
+
     return $result
 }
 
@@ -33,285 +49,124 @@ function Get-BooleanValue([string]$title, [string]$message, [boolean]$default) {
     return $flag
 }
 
-if($UseDefaults -eq $false){
-    $companyName = Get-StringValue -title "Company Info" -message "Select Name" -default $companyName
-    $productName = Get-StringValue -title "Product Info" -message "Select Name" -default $productName
-    $srcPath = Get-StringValue -title "Source Code" -message "Select Directory" -default $srcPath
-    $artifactsPath = Get-StringValue -title "Build Output" -message "Select Directory" -default $artifactsPath
-    $toolsPath = Get-StringValue -title "Tools" -message "Select Directory" -default $toolsPath
-    $buildScript = Get-StringValue -title "Build Script" -message "Select Name" -default $buildScript
-    $addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
-    $addNugetPackageRestore = Get-BooleanValue -title "Package Restore" -message "Add nuget package restore task" -default $addNugetPackageRestore
-    $addTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -message "Add TeamCity task messages" -default $addTeamCityTaskNameLogging
-    $addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Octopack msbuild parameters" -default $addOctopack
-    $addDefaultTask = Get-BooleanValue -title "Build Script" -message "Add default psake task" -default $addDefaultTask
-    $addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
-    $addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
+function Write([string]$message){
+    Write-Host -ForegroundColor Green $message
 }
 
-Write-Host -ForegroundColor Green "###################################################"
-Write-Host -ForegroundColor Green "Source Code Directory: $srcPath"
-Write-Host -ForegroundColor Green "Build output Directory: $artifactsPath"
-Write-Host -ForegroundColor Green "Tools Directory: $toolsPath"
-Write-Host -ForegroundColor Green "Build Script Default: $buildScript"
-Write-Host -ForegroundColor Green "Add Nuget Package Restore Task: $addNugetPackageRestore"
-Write-Host -ForegroundColor Green "Add CI task: $addCITask"
-Write-Host -ForegroundColor Green "Add TC message functions: $addTeamCityTaskNameLogging"
-Write-Host -ForegroundColor Green "Add Octopack compile switches: $addOctopack"
-Write-Host -ForegroundColor Green "Add default psake task: $addDefaultTask"
-Write-Host -ForegroundColor Green "Add unit test task: $addUnitTests"
-Write-Host -ForegroundColor Green "Add rebuild database task: $addUnitTests"
-
-@($srcPath, $artifactsPath), $toolsPath | % {
-    New-Item -Force -ItemType Directory -Path $_ | Out-Null
-}
-
-$bootstrapscriptContent = @"
-param(
-    `$taskList=@('Default'),
-    `$version="1.0.0",
-    [switch]`$runOctoPack
-)
-
-`$nugetPath = ".\src\.nuget\"
-if((Test-Path -Path "`$nugetPath\nuget.exe") -eq `$false){
-    Write-Host "Downloading nuget to `$nugetPath"
-    New-Item -ItemType Directory -Path `$nugetPath -Force | Out-Null
-    Invoke-WebRequest -Uri "https://www.nuget.org/nuget.exe" -OutFile "`$nugetPath\nuget.exe" | Out-Null
-}
-
-`$psakePath = ".\tools\psake\4.6.0\psake.psm1"
-if((Test-Path -Path `$psakePath) -eq `$false){
-    Write-Host "Psake module missing"
-    Write-Host "Updating package provider"
-    Install-PackageProvider NuGet -Force
-    Write-Host "Seaching for psake package and saving local copy"
-    `$module = Find-Module -Name psake
-    Write-Host "Psake module found. Saving local copy"
-    `$module | Save-Module -Path .\tools\ -Force
-}
-
-`# '[p]sake' is the same as 'psake' but  is not polluted
-Remove-Module [p]sake
-Import-Module `$psakePath
-
-# call default.ps1 with properties
-Invoke-Psake -buildFile ".\default.ps1" -taskList `$taskList -properties @{ "version" = `$version; "runOctoPack" = `$runOctoPack; }
-
-if(`$psake.build_success) { exit 0 } else { exit 1 }
-"@
-
-New-Item -ItemType File -Path $bootstrapscript -Value $bootstrapscriptContent -Force | Out-Null
-
-$scriptProperties = @"
-# Script Properties
-Framework "4.5.2"
-properties {
-    `$baseDirectory = Resolve-Path .\
-    `$sourceDirectory = "`$baseDirectory\$srcPath"
-
-    `$company = "$companyName"
-    `$product = "$productName"
-
-    `$outputDirectory = "`$baseDirectory\$artifactsPath"
-    `$packagesDirectory = "`$sourceDirectory\packages"
-    `$packagesOutputDirectory = "`$outputDirectory\packages"
-    `$environment = "Local"
-
-    # msbuild settings
-    `$solution = "Default.sln"
-    `$solutionFile = "`$sourceDirectory\`$solution"
-    `$verbosity = "normal"
-    `$buildConfiguration = "Release"
-    `$buildPlatform = "Any CPU"
-    `$version = "1.0.0"
-    `$runOctoPack = "false"
-
-    # tools
-    `$nugetExe = "`$sourceDirectory\.nuget\nuget.exe"
-    `$migrator = "`$sourceDirectory\packages\roundhouse.0.8.6\bin\rh.exe"
-    `$sqlPackageExe = "`$baseDirectory\$toolsPath\SqlPackage.13.0.3450\sqlPackage.exe"
-
-    # database
-    `$databaseServer = "localhost\sqlexpress2014"
-    `$integratedSecurity = "Integrated Security=True"
-}
-"@
-
-$tasksDefaults = @"
-task Default -depends Clean, Init, Compile, Test
-"@
-
-$tasksUnitTest = @"
-task UnitTests -depends Compile {
-
-}
-"@
-
-$tasksRebuildDatabase = @"
-task Rebuild-Database -depends Compile {
-
-}
-"@
-
-$tasksSetup = @"
-task Clean {
-    NukeDirectory `$outputDirectory\**
-
-    @("bin","obj") | ForEach-Object {
-        NukeDirectory "`$sourceDirectory\**\`$_\"
-    }
-}
-task Init {
-    Assert(Test-Path `$nugetExe) -failureMessage "Nuget command line tool is missing at `$nugetExe"
-
-    Write-Host "Creating build output directory at `$outputDirectory"
-    CreateDirectory `$outputDirectory
-}
-"@
-
-$taskPlainCompile = @"
-task Compile -depends Init, Restore-Packages, Create-AssemblyInfo {
-    Exec {
-        msbuild `$solutionFile ``
-            /verbosity:`$verbosity ``
-            /p:Configuration=`$buildConfiguration ``
-            /p:Platform=`$buildPlatform
-    }
-}
-"@
-
-$taskOctoCompile = @"
-task Compile -depends Init, Restore-Packages, Create-AssemblyInfo {
-    Exec {
-        msbuild `$solutionFile ``
-            /verbosity:`$verbosity ``
-            /p:Configuration=`$buildConfiguration ``
-            /p:Platform=`$buildPlatform ``
-            /p:OctoPackPackageVersion=`$version ``
-            /p:RunOctoPack=`$runOctoPack ``
-            /p:OctoPackEnforceAddingFiles=true ``
-            /p:OctoPackPublishPackageToFileShare="`$packagesOutputDirectory"
-    }
-}
-"@
-
-$taskRestorePackages = @"
-task Restore-Packages {
-    Exec { & `$nugetExe "restore" `$solutionFile }
-}
-task Clean-Packages {
-    Remove-Item -Force -Recurse `$packagesDirectory;
-    CreateDirectory `$packagesDirectory;
-}
-"@
-
-$taskSetupAndTearDownFunctions = @"
-TaskSetup{
-    if(`$env:TEAMCITY_VERSION){
-        Write-Output "##teamcity[blockOpened name='$taskName']"
-    }
-}
-TaskTearDown{
-    if(`$env:TEAMCITY_VERSION){
-        Write-Output "##teamcity[blockClosed name='$taskName']"
-    }
-}
-"@
-
-$scriptFunctions = @"
-function CreateDirectory(`$directory) {
-    Write-Host "Creating `$directory"
-    New-Item `$directory -ItemType Directory -Force | Out-Null
-}
-function NukeDirectory(`$directory) {
-    if(Test-Path `$directory){
-        Write-Host "Removing `$directory"
-        Remove-Item `$directory -Force -Recurse | Out-Null
-    } else {
-        Write-Host "`$directory does not exist"
-    }
-}
-"@
-
-$functionAssemblyInfo = @"
-function CreateCommonAssemblyInfo(`$version,`$buildConfiguration,`$filename) {
-`$year = (Get-Date).Year
-"using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
-//------------------------------------------------------------------------------
-// <auto-generated>
-//     This code was generated by a tool.
-//     Runtime Version:2.0.50727.4927
-//
-//     Changes to this file may cause incorrect behavior and will be lost if
-//     the code is regenerated.
-// </auto-generated>
-//------------------------------------------------------------------------------
-[assembly: ComVisibleAttribute(false)]
-[assembly: AssemblyVersionAttribute(""`$version"")]
-[assembly: AssemblyFileVersionAttribute(""`$version"")]
-[assembly: AssemblyCopyrightAttribute(""Copyright `$year"")]
-[assembly: AssemblyProductAttribute(""`$product"")]
-[assembly: AssemblyCompanyAttribute(""`$company"")]
-[assembly: AssemblyConfigurationAttribute(""`$buildConfiguration"")]
-[assembly: AssemblyInformationalVersionAttribute(""`$version"")]" | out-file $filename -encoding "ASCII"
-}
-"@
-
-function AppendBuildScript($content, $enable){
+function AppendContent($Message, $Uri, $BuildScriptPath, [switch]$Enable, [hashtable]$Decode){
     if($enable){
-        Add-Content -Path $buildScript -Value $content -Encoding Ascii | Out-Null
+        Write $Message
+        $progressPreference = 'silentlyContinue'
+        $content = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -Headers @{"Cache-Control"="no-cache"} ).content
+        $progressPreference = 'Continue'
+        if($Decode){
+            $Decode.GetEnumerator() |% {
+                $key = $_.Key;$value = $_.Value;
+                $content = ($content -replace $key, $value)
+            }
+        }
+        Add-Content -Path $BuildScriptPath -Value $content -Encoding Ascii  | Out-Null
     }
 }
 
-New-Item -ItemType File -Path $buildScript -Value $scriptProperties -Force | Out-Null
-
-AppendBuildScript "`r`n# Script Tasks" $true
-AppendBuildScript $tasksDefaults $true
-AppendBuildScript $tasksSetup $true
-AppendBuildScript $taskRestorePackages $addNugetPackageRestore
-AppendBuildScript $tasksUnitTest $addUnitTests
-AppendBuildScript $tasksRebuildDatabase $addRebuildDatabase
-
-if($addOctopack){
-    Add-Content -Path $buildScript -Value $taskOctoCompile -Encoding Ascii | Out-Null
-} else {
-    Add-Content -Path $buildScript -Value $taskPlainCompile -Encoding Ascii | Out-Null
+function CreateDirectory($message, $path){
+    Write $message
+    New-Item -Force -ItemType Directory -Path $path | Out-Null
 }
 
-AppendBuildScript $taskSetupAndTearDownFunctions $addTeamCityTaskNameLogging
+$companyName = Get-StringValue -title "Company Info" -message "Select Name" -default $companyName
+$productName = Get-StringValue -title "Product Info" -message "Select Name" -default $productName
+$srcPath = Get-StringValue -title "Source Code" -message "Select Directory" -default $srcPath
+$artifactsPath = Get-StringValue -title "Build Output" -message "Select Directory" -default $artifactsPath
+$toolsPath = Get-StringValue -title "Tools" -message "Select Directory" -default $toolsPath
+$buildScript = Get-StringValue -title "Build Script" -message "Select Name" -default $buildScript
+$addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
+$addNugetPackageRestore = Get-BooleanValue -title "Package Restore" -message "Add nuget package restore task" -default $addNugetPackageRestore
+$addTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -message "Add TeamCity task messages" -default $addTeamCityTaskNameLogging
+$addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Octopack msbuild parameters" -default $addOctopack
+$addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
+$addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
 
-AppendBuildScript "`r`n# Script Functions" $true
-AppendBuildScript $scriptFunctions $true
-AppendBuildScript $functionAssemblyInfo $true
 
-Write-Host -ForegroundColor Green "Fetching .gitignore file from GitHub"
-(Invoke-WebRequest https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore -UseBasicParsing).Content | Out-File -Encoding ascii -FilePath .\.gitignore -Force
+# File Uris
+$rootUri = "https://raw.githubusercontent.com/psakezero/script/$branch"
+$gitattributesUri = "$rootUri/components/gitattributes.txt"
+$gitignoreUri = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore"
+$bootstrapUri = "$rootUri/components/run.ps1"
+$scriptPropertiesUri = "$rootUri/components/script-properties/properties.ps1"
+$scriptDefaultUri = "$rootUri/components/script-tasks/Default.ps1"
+$scriptCleanUri = "$rootUri/components/script-tasks/Clean.ps1"
+$scriptInitUri = "$rootUri/components/script-tasks/Init.ps1"
+$scriptRestorePackagesUri = "$rootUri/components/script-tasks/Restore-Packages.ps1"
+$scriptCleanPackagesUri = "$rootUri/components/script-tasks/Clean-Packages.ps1"
+$scriptTaskSetupUri = "$rootUri/components/script-tasks/TaskSetup.ps1"
+$scriptTaskTearDownUri = "$rootUri/components/script-tasks/TaskTearDown.ps1"
 
-Write-Host -ForegroundColor Green "Creating simple .gitattributes file"
-@"
-# Auto detect text files and perform LF normalization
-# http://davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
-* text=auto
+$scriptUnitTestsUri = "$rootUri/components/script-tasks/UnitTests.ps1"
+$scriptRebuildDatabaseUri = "$rootUri/components/script-tasks/Rebuild-Database.ps1"
 
-# Custom for Visual Studio
-*.sln text eol=crlf
-*.csproj text eol=crlf
-*.vbproj text eol=crlf
-*.fsproj text eol=crlf
-*.dbproj text eol=crlf
+$scriptPlainCompileUri = "$rootUri/components/script-tasks/Plain-Compile.ps1"
+$scriptOctopusCompileUri = "$rootUri/components/script-tasks/Octopus-Compile.ps1"
 
-*.vcxproj text eol=crlf
-*.vcxitems text eol=crlf
-*.props text eol=crlf
-*.filters text eol=crlf
-"@ | Out-File -Encoding ascii -FilePath ".gitattributes"
+$scriptCreateCommonAssemblyInfoUri = "$rootUri/components/script-functions/CreateCommonAssemblyInfo.ps1"
+$scriptCreateDirectoryUri = "$rootUri/components/script-functions/CreateDirectory.ps1"
+$scriptDeleteDirectoryUri = "$rootUri/components/script-functions/DeleteDirectory.ps1"
 
+Write "###################################################"
+Write "Company Name: $companyName"
+Write "Product Name: $productName"
+
+CreateDirectory "Source Code Directory: $srcPath" $srcPath
+CreateDirectory "Build output Directory: $artifactsPath" $artifactsPath
+CreateDirectory "Tools Directory: $toolsPath" $toolsPath
+
+#Create gitattributes
+AppendContent -message "Creating .gitattributes files" -uri $gitattributesUri -buildScriptPath ".\.gitattributes" -Enable
+
+#Create gitignore
+AppendContent -message "Creating .gitignore files" -uri $gitignoreUri -buildScriptPath ".\.gitignore" -Enable
+
+#Create readme
 @"
 # $companyName
 ## $productName
 "@ | Out-File -Encoding ascii -FilePath "readme.md"
 
-Write-Host -ForegroundColor Green "###################################################"
+AppendContent -Message "Creating bootstrap file $bootstrapscript" -uri $bootstrapUri -buildScriptPath $bootstrapscript -Enable
+AppendContent -Message "Creating properties section to $buildScript" -uri $scriptPropertiesUri -buildScriptPath $buildScript -Enable -Decode @{ "\`$srcPath"= $srcPath;"\`$companyName"= $companyName;"\`$productName"= $productName; "\`$artifactsPath" = $artifactsPath}
+
+Add-Content -Path $buildScript -Value "# Script Tasks" -Encoding Ascii | Out-Null
+
+AppendContent -Message "Adding default task $bootstrapscript to $buildScript" -uri $scriptDefaultUri -buildScriptPath $buildScript -Enable
+AppendContent -Message "Adding clean task $bootstrapscript to $buildScript" -uri $scriptCleanUri -buildScriptPath $buildScript -Enable
+AppendContent -Message "Adding init $bootstrapscript to $buildScript" -uri $scriptInitUri -buildScriptPath $buildScript -Enable
+
+# Package Restore
+AppendContent -Message "Adding package restore task to $buildScript" -uri $scriptRestorePackagesUri -buildScriptPath $buildScript -Enable:$addNugetPackageRestore
+AppendContent -Message "Adding package clean task to $buildScript" -uri $scriptCleanPackagesUri -buildScriptPath $buildScript -Enable:$addNugetPackageRestore
+
+# TeamCity
+AppendContent -Message "Adding setup task to $buildScript" -uri $scriptTaskSetupUri -buildScriptPath $buildScript -Enable:$addTeamCityTaskNameLogging
+AppendContent -Message "Adding tear down task to $buildScript" -uri $scriptTaskTearDownUri -buildScriptPath $buildScript -Enable:$addTeamCityTaskNameLogging
+
+# Unit Tests
+AppendContent -Message "Adding unit test task to $buildScript" -uri $scriptUnitTestsUri -buildScriptPath $buildScript -Enable:$addUnitTests
+
+# Rebuild Database
+AppendContent -Message "Adding database rebuild task to $buildScript" -uri $scriptRebuildDatabaseUri -buildScriptPath $buildScript -Enable:$addRebuildDatabase
+
+$packageRestoreToken = if($addNugetPackageRestore) { @{ "\#Restore-Packages\,\#"= "Restore-Packages,"; } } else { @{ "\#Restore-Packages\,\#"= ""; } }
+
+if($addOctopack){
+    AppendContent -Message "Adding compile with octopus flags task to $buildScript" -uri $scriptOctopusCompileUri -buildScriptPath $buildScript -Enable -Decode $packageRestoreToken
+} else {
+    AppendContent -Message "Adding compile task to $buildScript" -uri $scriptPlainCompileUri -buildScriptPath $buildScript -Enable -Decode $packageRestoreToken
+}
+
+Add-Content -Path $buildScript -Value "# Script Functions" -Encoding Ascii | Out-Null
+
+AppendContent -Message "Adding assembly info function to $buildScript"  -uri $scriptCreateCommonAssemblyInfoUri -buildScriptPath $buildScript -Enable
+AppendContent -Message "Adding create directory function to $buildScript"  -uri $scriptCreateDirectoryUri -buildScriptPath $buildScript -Enable
+AppendContent -Message "Adding delete function to $buildScript"  -uri $scriptDeleteDirectoryUri -buildScriptPath $buildScript -Enable
+
+Write "###################################################"
