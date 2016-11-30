@@ -102,11 +102,12 @@ $scriptCleanPackagesUri = "$rootUri/components/script-tasks/Clean-Packages.ps1"
 $scriptTaskSetupUri = "$rootUri/components/script-tasks/TaskSetup.ps1"
 $scriptTaskTearDownUri = "$rootUri/components/script-tasks/TaskTearDown.ps1"
 
-$scriptUnitTestsUri = "$rootUri/components/script-tasks/UnitTests.ps1"
+$scriptUnitTestsUri = "$rootUri/components/script-tasks/Unit-Test.ps1"
 $scriptRebuildDatabaseUri = "$rootUri/components/script-tasks/Rebuild-Database.ps1"
 
 $scriptPlainCompileUri = "$rootUri/components/script-tasks/Plain-Compile.ps1"
 $scriptOctopusCompileUri = "$rootUri/components/script-tasks/Octopus-Compile.ps1"
+$scriptAssemblyInfoUri = "$rootUri/components/script-tasks/Create-CommonAssemblyInfo.ps1"
 
 $scriptCreateCommonAssemblyInfoUri = "$rootUri/components/script-functions/CreateCommonAssemblyInfo.ps1"
 $scriptCreateDirectoryUri = "$rootUri/components/script-functions/CreateDirectory.ps1"
@@ -162,6 +163,8 @@ if($addOctopack){
 } else {
     AppendContent -Message "Adding compile task to $buildScript" -uri $scriptPlainCompileUri -buildScriptPath $buildScript -Enable -Decode $packageRestoreToken
 }
+
+AppendContent -Message "Adding assmebly info task to $buildScript" -uri $scriptAssemblyInfoUri -buildScriptPath $buildScript -Enable
 
 Add-Content -Path $buildScript -Value "# Script Functions" -Encoding Ascii | Out-Null
 

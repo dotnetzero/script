@@ -1,1 +1,1 @@
-task Default -depends Clean, Init, Compile, Test
+task Default -depends Clean, Init, Compile, Unit-Test
