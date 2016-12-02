@@ -3,6 +3,7 @@ task Compile -depends Init, Restore-Packages, Create-AssemblyInfo {
         msbuild $solutionFile `
             /verbosity:$verbosity `
             /m `
+            /nr:false `
             /p:Configuration=$buildConfiguration `
             /p:Platform=$buildPlatform
     }
