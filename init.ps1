@@ -126,6 +126,8 @@ AppendContent -message "Creating .gitattributes files" -uri $gitattributesUri -b
 
 #Create gitignore
 AppendContent -message "Creating .gitignore files" -uri $gitignoreUri -buildScriptPath ".\.gitignore" -Enable
+Add-Content -Path ".\.gitignore" -Value "tools/" -Encoding Ascii  | Out-Null
+Add-Content -Path ".\.gitignore" -Value "$srcPath/.nuget/nuget.exe" -Encoding Ascii | Out-Null
 
 #Create readme
 @"
