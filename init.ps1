@@ -125,7 +125,8 @@ $addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Oct
 $addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
 $addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
 
-Write "###################################################"
+$headerLine = "#######################################################";
+Write $headerLine
 Write "Company Name: $companyName"
 Write "Product Name: $productName"
 
@@ -186,4 +187,6 @@ AppendContent -Message "Adding assembly info function to $buildScript"  -uri $sc
 AppendContent -Message "Adding create directory function to $buildScript"  -uri $scriptCreateDirectoryUri -buildScriptPath $buildScript -Enable
 AppendContent -Message "Adding delete function to $buildScript"  -uri $scriptDeleteDirectoryUri -buildScriptPath $buildScript -Enable
 
-Write "###################################################"
+Write $headerLine
+WriteUriContent -Uri $usageUri
+Write $headerLine
