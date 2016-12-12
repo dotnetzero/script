@@ -69,27 +69,23 @@ function AppendContent($Message, $Uri, $BuildScriptPath, [switch]$Enable, [hasht
     }
 }
 
+function WriteUriContent($Uri){
+    $progressPreference = 'silentlyContinue'
+    $content = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -Headers @{"Cache-Control"="no-cache"} ).content
+    $progressPreference = 'Continue'
+    Write-Host $content
+}
+
 function CreateDirectory($message, $path){
     Write $message
     New-Item -Force -ItemType Directory -Path $path | Out-Null
 }
 
-$companyName = Get-StringValue -title "Company Info" -message "Select Name" -default $companyName
-$productName = Get-StringValue -title "Product Info" -message "Select Name" -default $productName
-$srcPath = Get-StringValue -title "Source Code" -message "Select Directory" -default $srcPath
-$artifactsPath = Get-StringValue -title "Build Output" -message "Select Directory" -default $artifactsPath
-$toolsPath = Get-StringValue -title "Tools" -message "Select Directory" -default $toolsPath
-$buildScript = Get-StringValue -title "Build Script" -message "Select Name" -default $buildScript
-$addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
-$addNugetPackageRestore = Get-BooleanValue -title "Package Restore" -message "Add nuget package restore task" -default $addNugetPackageRestore
-$addTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -message "Add TeamCity task messages" -default $addTeamCityTaskNameLogging
-$addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Octopack msbuild parameters" -default $addOctopack
-$addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
-$addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
-
-
 # File Uris
 $rootUri = "https://raw.githubusercontent.com/psakezero/script/$branch"
+$headerUri = "$rootUri/components/header"
+$licenseUri = "$rootUri/LICENSE"
+$usageUri = "$rootUri/components/usage"
 $gitattributesUri = "$rootUri/components/gitattributes.txt"
 $gitignoreUri = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore"
 $bootstrapUri = "$rootUri/components/run.ps1"
@@ -112,6 +108,22 @@ $scriptAssemblyInfoUri = "$rootUri/components/script-tasks/Create-CommonAssembly
 $scriptCreateCommonAssemblyInfoUri = "$rootUri/components/script-functions/CreateCommonAssemblyInfo.ps1"
 $scriptCreateDirectoryUri = "$rootUri/components/script-functions/CreateDirectory.ps1"
 $scriptDeleteDirectoryUri = "$rootUri/components/script-functions/DeleteDirectory.ps1"
+
+WriteUriContent -Uri $headerUri
+WriteUriContent -Uri $licenseUri
+
+$companyName = Get-StringValue -title "Company Info" -message "Select Name" -default $companyName
+$productName = Get-StringValue -title "Product Info" -message "Select Name" -default $productName
+$srcPath = Get-StringValue -title "Source Code" -message "Select Directory" -default $srcPath
+$artifactsPath = Get-StringValue -title "Build Output" -message "Select Directory" -default $artifactsPath
+$toolsPath = Get-StringValue -title "Tools" -message "Select Directory" -default $toolsPath
+$buildScript = Get-StringValue -title "Build Script" -message "Select Name" -default $buildScript
+$addCITask = Get-BooleanValue -title "Continous Integration" -message "Add continous integration task" -default $addCITask
+$addNugetPackageRestore = Get-BooleanValue -title "Package Restore" -message "Add nuget package restore task" -default $addNugetPackageRestore
+$addTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -message "Add TeamCity task messages" -default $addTeamCityTaskNameLogging
+$addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Octopack msbuild parameters" -default $addOctopack
+$addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
+$addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
 
 Write "###################################################"
 Write "Company Name: $companyName"
