@@ -1,4 +1,8 @@
-task Compile -depends Init, Restore-Packages, Create-AssemblyInfo {
+task Compile `
+    -depends Init, Restore-Packages, Create-AssemblyInfo `
+    -description "Compiles the code" `
+    -requiredVariables solutionFile, verbosity, buildConfiguration, buildPlatform `
+{
     Exec {
         msbuild $solutionFile `
             /verbosity:$verbosity `
