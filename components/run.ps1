@@ -1,7 +1,8 @@
 param(
-    $taskList=@('Default'),
-    $version="1.0.0",
-    [switch]$runOctoPack
+    [string[]]$taskList=@('Default'),
+    [string]$version="1.0.0",
+    [switch]$runOctoPack=$false,
+    [switch]$help=$false
 )
 
 $nugetPath = ".\src\.nuget\"
@@ -25,6 +26,10 @@ if((Test-Path -Path $psakePath) -eq $false){
 # '[p]sake' is the same as 'psake' but  is not polluted
 Remove-Module [p]sake
 Import-Module $psakePath
+if ($help) {
+  Invoke-Psake -buildFile ".\default.ps1" -docs
+  return
+}
 
 # call default.ps1 with properties
 Invoke-Psake -buildFile ".\default.ps1" -taskList $taskList -properties @{ "version" = $version; "runOctoPack" = $runOctoPack; }
