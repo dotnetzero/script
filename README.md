@@ -1,5 +1,7 @@
 # psakezero
 
+[![Build status](https://ci.appveyor.com/api/projects/status/tafyfqtcuqvw4ft8/branch/master?svg=true)](https://ci.appveyor.com/project/motowilliams/script/branch/master)
+
 ## Why
 
 There was a project 42 years ago called Tree Surgeon what would setup a directory structure for your next project. This was early, early .NET days but it was a handy little utility.
