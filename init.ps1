@@ -14,9 +14,9 @@ param(
     [boolean]$addUnitTests = $true,
     [boolean]$addRebuildDatabase = $true,
     [string]$branch = "master",
-	[boolean]$importTemplateRepo = $false,
-	[string]$repoName = "BaselineSolution",
-	[string]$repoAccoutName = "JustinMason",
+	[boolean]$importTemplateRepo = $true,
+	[string]$repoName = "ClearMeasureBootcamp",
+	[string]$repoAccoutName = "ClearMeasureLabs",
 	[string]$repoBranch = "master"
 )
 
@@ -97,74 +97,78 @@ function CreateDirectory($message, $path){
 
 function Copy-GithubRepository
 {
-        param(
-        [Parameter(Mandatory=$True)]
-        [string] $Name,
-        
-        [Parameter(Mandatory=$True)]
-        [string] $Author,
-        
-        [Parameter(Mandatory=$False)]
-        [string] $Branch = "master",
-        
-        [Parameter(Mandatory=$False)]
-        [string] $GithubTokenVariableAssetName = "GithubToken",
-		
-		[Parameter(Mandatory=$True)]
-        [string] $sourceDirectory = "src"
-		
-        )
-		
-        $importRepoDirectory =  "$PWD\importedRepo"
-		CreateDirectory "Import Code Template Directory: $importRepoDirectory"  "$importRepoDirectory"
-		
-        $ZipFile = "$importRepoDirectory\$Name.zip"
-        $OutputFolder = "$importRepoDirectory\$Name"
-		$projectSourceDirectory = "$PWD\$sourceDirectory"
-		
-        
-        #$Token = Get-AutomationVariable -Name $GithubTokenVariableAssetName
-        
-        #if(!$Token) {
-        #    throw("'$GithubTokenVariableAssetName' variable asset does not exist or is empty.")
-        #}
+	param(
+	[Parameter(Mandatory=$True)]
+	[string] $Name,
+	
+	[Parameter(Mandatory=$True)]
+	[string] $Author,
+	
+	[Parameter(Mandatory=$False)]
+	[string] $Branch = "master",
+	
+	[Parameter(Mandatory=$False)]
+	[string] $GithubTokenVariableAssetName = "GithubToken",
+	
+	[Parameter(Mandatory=$True)]
+	[string] $sourceDirectory = "src"
+	
+	)
+	
+	$importRepoDirectory =  "$PWD\importedRepo"
+	CreateDirectory "Import Code Template Directory: $importRepoDirectory"  "$importRepoDirectory"
+	
+	$ZipFile = "$importRepoDirectory\$Name.zip"
+	$OutputFolder = "$importRepoDirectory\$Name"
+	$projectSourceDirectory = "$PWD\$sourceDirectory"
+   
+	$RepositoryZipUrl = "https://api.github.com/repos/$Author/$Name/zipball/$Branch"
 
-        $RepositoryZipUrl = "https://api.github.com/repos/$Author/$Name/zipball/$Branch"
-
-        # download the zip
-        Invoke-RestMethod -Uri $RepositoryZipUrl -OutFile $ZipFile
-        #Invoke-RestMethod -Uri $RepositoryZipUrl -Headers @{"Authorization" = "token $Token"} -OutFile $ZipFile
-        
-        # extract the zip
-        #InlineScript {        
-            New-Item -Path $OutputFolder -ItemType Directory | Out-Null
-            
-            [System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | Out-Null
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $OutputFolder)
-        #}
-
-        # remove zip
-        Remove-Item -Path $ZipFile -Force
-        
-        #output the path to the downloaded repository
-        (ls $OutputFolder)[0].FullName
+	# download the zip
+	Invoke-RestMethod -Uri $RepositoryZipUrl -OutFile $ZipFile
+	
+	# extract the zip
+	New-Item -Path $OutputFolder -ItemType Directory | Out-Null
 		
-		$src = Get-ChildItem $OutputFolder -recurse | Where-Object {$_.PSIsContainer -eq $true -and $_.Name -match "src"}
+	[System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | Out-Null
+	[System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $OutputFolder)
+
+	# remove zip
+	Remove-Item -Path $ZipFile -Force
+	
+	#output the path to the downloaded repository
+	(ls $OutputFolder)[0].FullName
+	
+	#Only copy the src from the GitHub Template, This is a convention for now, expect the Run.ps1 to handle the rest
+	$src = Get-ChildItem $OutputFolder -recurse | Where-Object {$_.PSIsContainer -eq $true -and $_.Name -match "src"}
+	
+	if($src -eq $null)
+	{
+		Write "$OutputFolder does not have a src directory.  You will have to manually moved files into $projectSourceDirectory"
+	}
+	else
+	{
+		Copy-Item "$($src.FullName)\*" $projectSourceDirectory -recurse
 		
-		if($src -eq $null)
+		$solutionFile = Get-ChildItem $projectSourceDirectory | Where-Object {$_.Name -like "*.sln"}
+		if($solutionFile -eq $null)
 		{
-			Write "$OutputFolder does not have a src directory.  You will have to manually moved files into $projectSourceDirectory"
+			Write "$projectSourceDirectory does not have a Visual Studio Solution File.  You will need to create a Default.sln for the Run to build."
 		}
-		else
-		{
-			Copy-Item "$($src.FullName)\*" $projectSourceDirectory -recurse
-			Remove-Item -Path $importRepoDirectory -Force -recurse
+		else{
+			if($solutionFile.Name -ne "default.sln")
+			{
+				$fileOriginalName =$solutionFile.FullName;
+				Write "Renaming $fileOriginalName to default.sln to match Run execution convention"
+				Rename-Item -Path $solutionFile.FullName -NewName "default.sln"
+			}
 		}
-		
+		Remove-Item -Path $importRepoDirectory -Force -recurse
+	}
 }
 
 # File Uris
-$rootUri = "https://raw.githubusercontent.com/JustinMason/script/feature/ImportGitRepoIntoSrc"
+$rootUri = "https://raw.githubusercontent.com/psakezero/script/$branch"
 $headerUri = "$rootUri/components/header"
 $licenseUri = "$rootUri/LICENSE"
 $usageUri = "$rootUri/components/usage"
@@ -190,8 +194,6 @@ $scriptAssemblyInfoUri = "$rootUri/components/script-tasks/Create-CommonAssembly
 $scriptCreateCommonAssemblyInfoUri = "$rootUri/components/script-functions/CreateCommonAssemblyInfo.ps1"
 $scriptCreateDirectoryUri = "$rootUri/components/script-functions/CreateDirectory.ps1"
 $scriptDeleteDirectoryUri = "$rootUri/components/script-functions/DeleteDirectory.ps1"
-
-$scriptGetGitHubRepo = "file:///C:/Users/Justin%20Mason/Documents/repos/psakezero/components/script-tasks/GetGitHubRepo.ps1"
 
 WriteUriContent -Uri $headerUri
 WriteUriContent -Uri $licenseUri
@@ -280,8 +282,8 @@ Add-Content -Path $buildScript -Value "# Script Functions" -Encoding Ascii | Out
 AppendContent -Message "Adding assembly info function to $buildScript"  -uri $scriptCreateCommonAssemblyInfoUri -buildScriptPath $buildScript -Enable
 AppendContent -Message "Adding create directory function to $buildScript"  -uri $scriptCreateDirectoryUri -buildScriptPath $buildScript -Enable
 AppendContent -Message "Adding delete function to $buildScript"  -uri $scriptDeleteDirectoryUri -buildScriptPath $buildScript -Enable
-#AppendContent -Message "Adding Getting Github Code" -uri $scriptGetGitHubRepo -buildScriptPath $buildScript -Enable 
 
+#Pull GitHub starting point template
 if($importTemplateRepo)
 {
 	Copy-GithubRepository -Name $repoName -Author $repoAccoutName -Branch $repoBranch -SourceDirectory  $srcPath
