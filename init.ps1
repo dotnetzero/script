@@ -140,11 +140,11 @@ function Copy-GithubRepository
 	(ls $OutputFolder)[0].FullName
 	
 	#Only copy the src from the GitHub Template, This is a convention for now, expect the Run.ps1 to handle the rest
-	$src = Get-ChildItem $OutputFolder -recurse | Where-Object {$_.PSIsContainer -eq $true -and $_.Name -match "src"}
+	$src = Get-ChildItem $OutputFolder -recurse | Where-Object {$_.PSIsContainer -eq $true -and $_.Name -match $sourceDirectory}
 	
 	if($src -eq $null)
 	{
-		Write "$OutputFolder does not have a src directory.  You will have to manually moved files into $projectSourceDirectory"
+		Write "$OutputFolder does not have a $sourceDirectory directory.  You will have to manually moved files into $projectSourceDirectory"
 	}
 	else
 	{
@@ -286,7 +286,7 @@ AppendContent -Message "Adding delete function to $buildScript"  -uri $scriptDel
 #Pull GitHub starting point template
 if($importTemplateRepo)
 {
-	Copy-GithubRepository -Name $repoName -Author $repoAccoutName -Branch $repoBranch -SourceDirectory  $srcPath
+	Copy-GithubRepository -Name $repoName -Author $repoAccoutName -Branch $repoBranch -SourceDirectory $srcPath
 }
 
 
