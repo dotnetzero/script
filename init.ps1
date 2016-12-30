@@ -164,7 +164,7 @@ function Copy-GithubRepository
 }
 
 # File Uris
-$rootUri = "https://raw.githubusercontent.com/psakezero/script/$branch"
+$rootUri = "https://raw.githubusercontent.com/JustinMason/script/feature/ImportGitRepoIntoSrc"
 $headerUri = "$rootUri/components/header"
 $licenseUri = "$rootUri/LICENSE"
 $usageUri = "$rootUri/components/usage"
