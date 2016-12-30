@@ -8,7 +8,7 @@ $nugetPath = ".\src\.nuget\"
 if((Test-Path -Path "$nugetPath\nuget.exe") -eq $false){
     Write-Host "Downloading nuget to $nugetPath"
     New-Item -ItemType Directory -Path $nugetPath -Force | Out-Null
-    Invoke-WebRequest -Uri "https://www.nuget.org/nuget.exe" -OutFile "$nugetPath\nuget.exe" | Out-Null
+    Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "$nugetPath\nuget.exe" | Out-Null
 }
 
 $psakePath = ".\tools\psake\4.6.0\psake.psm1"
