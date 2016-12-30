@@ -8,8 +8,6 @@
 *.PDF	diff=astextplain
 *.rtf	diff=astextplain
 *.RTF	diff=astextplain
-*.ps1	diff merge text 
-
 
 *.jpg  	binary
 *.png 	binary
@@ -43,8 +41,6 @@
 *.fs -text
 *.fsx -text
 *.hs -text
-*.ps1 -text
-
 
 *.csproj -text merge=union 
 *.vbproj -text merge=union 
