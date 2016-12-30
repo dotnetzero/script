@@ -4,14 +4,14 @@
 
 ## Why
 
-There was a project 42 years ago called Tree Surgeon what would setup a directory structure for your next project. This was early, early .NET days but it was a handy little utility.
+There was a project 42 years ago, called Tree Surgeon, that would setup a directory structure for your next project. This was early, early .NET days, but it was a handy little utility.
 
-init.ps1 takes some CLI observations from NPM and attempts to setup a initialized empty shell of a repo to help projects get setup quickly.
+init.ps1 takes some CLI observations from NPM and attempts to setup an initialized empty shell of a repo to help projects get setup quickly.
 
 ## The Defaults
 
 - [x] source code into a root level src directory
-- [x] components to deploy into a artifacts directory
+- [x] components to deploy into an artifacts directory
 - [x] permanent tools going into a tools directory
 - [x] using a file named default.ps1 as your primary build script
 - [x] prompts you for a few default tasks
@@ -26,7 +26,7 @@ init.ps1 takes some CLI observations from NPM and attempts to setup a initialize
 - [x] gets the latest version of Nuget and will update itself occasionally
 - [ ] updates nuget occasionally
 - [x] creates a readme.md file
-- [ ] dynamically adds dependant tasks
+- [ ] dynamically adds dependent tasks
 
 ## Installing
 
