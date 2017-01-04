@@ -50,7 +50,7 @@ function Get-BooleanValue([string]$title, [string]$message, [boolean]$default) {
 }
 
 function Write([string]$message){
-    Write-Host -ForegroundColor Green $message
+    Write-Host $message -ForegroundColor Green
 }
 
 function AppendContent($Message, $Uri, $BuildScriptPath, [switch]$Enable, [hashtable]$Decode){
@@ -60,7 +60,7 @@ function AppendContent($Message, $Uri, $BuildScriptPath, [switch]$Enable, [hasht
         $content = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -Headers @{"Cache-Control"="no-cache"} ).content
         $progressPreference = 'Continue'
         if($Decode){
-            $Decode.GetEnumerator() |% {
+            $Decode.GetEnumerator() | ForEach-Object {
                 $key = $_.Key;$value = $_.Value;
                 $content = ($content -replace $key, $value)
             }
@@ -125,6 +125,10 @@ $addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Oct
 $addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
 $addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
 
+$regex = "[^\x30-\x39\x41-\x5A\x61-\x7A]+"
+$companyNameClean = $companyName -replace $regex, ""
+$productNameClean = $productName -replace $regex, ""
+
 $headerLine = "#######################################################";
 Write $headerLine
 Write "Company Name: $companyName"
@@ -149,7 +153,14 @@ Add-Content -Path ".\.gitignore" -Value "$srcPath/.nuget/nuget.exe" -Encoding As
 "@ | Out-File -Encoding ascii -FilePath "readme.md"
 
 AppendContent -Message "Creating bootstrap file $bootstrapscript" -uri $bootstrapUri -buildScriptPath $bootstrapscript -Enable
-AppendContent -Message "Creating properties section to $buildScript" -uri $scriptPropertiesUri -buildScriptPath $buildScript -Enable -Decode @{ "\`$srcPath"= $srcPath;"\`$companyName"= $companyName;"\`$productName"= $productName; "\`$artifactsPath" = $artifactsPath}
+AppendContent -Message "Creating properties section to $buildScript" -uri $scriptPropertiesUri -buildScriptPath $buildScript -Enable -Decode @{
+    "\`$srcPath"= $srcPath;
+    "\`$companyName"= $companyName;
+    "\`$productName"= $productName;
+    "\`$companyNameClean"= $companyNameClean;
+    "\`$productNameClean"= $productNameClean;
+    "\`$artifactsPath" = $artifactsPath;
+}
 
 Add-Content -Path $buildScript -Value "# Script Tasks" -Encoding Ascii | Out-Null
 

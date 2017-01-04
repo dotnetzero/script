@@ -12,7 +12,7 @@ properties {
     $packagesOutputDirectory = "$outputDirectory\packages"
 
     # msbuild settings
-    $solution = "$companyName.$productName.sln"
+    $solution = "$companyNameClean.$productNameClean.sln"
     $solutionFile = "$sourceDirectory\$solution"
     $verbosity = "normal"
     $buildConfiguration = "Release"
