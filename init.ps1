@@ -13,7 +13,11 @@ param(
     [boolean]$addOctopack = $true,
     [boolean]$addUnitTests = $true,
     [boolean]$addRebuildDatabase = $true,
-    [string]$branch = "master"
+    [string]$branch = "master",
+	[boolean]$importTemplateRepo = $true,
+	[string]$repoName = "ClearMeasureBootcamp",
+	[string]$repoAccoutName = "ClearMeasureLabs",
+	[string]$repoBranch = "master"
 )
 
 function Get-StringValue([string]$title, [string]$message, [string]$default) {
@@ -57,7 +61,17 @@ function AppendContent($Message, $Uri, $BuildScriptPath, [switch]$Enable, [hasht
     if($enable){
         Write $Message
         $progressPreference = 'silentlyContinue'
-        $content = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -Headers @{"Cache-Control"="no-cache"} ).content
+		$requestResult = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -Headers @{"Cache-Control"="no-cache"} )
+		
+		if($requestResult.content.GetType().Name -eq "String")
+        {
+			$content = $requestResult.content
+		}
+		else
+		{
+			$content = $requestResult
+		}
+		
         $progressPreference = 'Continue'
         if($Decode){
             $Decode.GetEnumerator() |% {
@@ -79,6 +93,78 @@ function WriteUriContent($Uri){
 function CreateDirectory($message, $path){
     Write $message
     New-Item -Force -ItemType Directory -Path $path | Out-Null
+}
+
+function Copy-GithubRepository
+{
+	param(
+	[Parameter(Mandatory=$True)]
+	[string] $Name,
+	
+	[Parameter(Mandatory=$True)]
+	[string] $Author,
+	
+	[Parameter(Mandatory=$False)]
+	[string] $Branch = "master",
+	
+	[Parameter(Mandatory=$False)]
+	[string] $GithubTokenVariableAssetName = "GithubToken",
+	
+	[Parameter(Mandatory=$True)]
+	[string] $sourceDirectory = "src"
+	
+	)
+	
+	$importRepoDirectory =  "$PWD\importedRepo"
+	CreateDirectory "Import Code Template Directory: $importRepoDirectory"  "$importRepoDirectory"
+	
+	$ZipFile = "$importRepoDirectory\$Name.zip"
+	$OutputFolder = "$importRepoDirectory\$Name"
+	$projectSourceDirectory = "$PWD\$sourceDirectory"
+   
+	$RepositoryZipUrl = "https://api.github.com/repos/$Author/$Name/zipball/$Branch"
+
+	# download the zip
+	Invoke-RestMethod -Uri $RepositoryZipUrl -OutFile $ZipFile
+	
+	# extract the zip
+	New-Item -Path $OutputFolder -ItemType Directory | Out-Null
+		
+	[System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | Out-Null
+	[System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $OutputFolder)
+
+	# remove zip
+	Remove-Item -Path $ZipFile -Force
+	
+	#output the path to the downloaded repository
+	(ls $OutputFolder)[0].FullName
+	
+	#Only copy the src from the GitHub Template, This is a convention for now, expect the Run.ps1 to handle the rest
+	$src = Get-ChildItem $OutputFolder -recurse | Where-Object {$_.PSIsContainer -eq $true -and $_.Name -match $sourceDirectory}
+	
+	if($src -eq $null)
+	{
+		Write "$OutputFolder does not have a $sourceDirectory directory.  You will have to manually moved files into $projectSourceDirectory"
+	}
+	else
+	{
+		Copy-Item "$($src.FullName)\*" $projectSourceDirectory -recurse
+		
+		$solutionFile = Get-ChildItem $projectSourceDirectory | Where-Object {$_.Name -like "*.sln"}
+		if($solutionFile -eq $null)
+		{
+			Write "$projectSourceDirectory does not have a Visual Studio Solution File.  You will need to create a Default.sln for the Run to build."
+		}
+		else{
+			if($solutionFile.Name -ne "default.sln")
+			{
+				$fileOriginalName =$solutionFile.FullName;
+				Write "Renaming $fileOriginalName to default.sln to match Run execution convention"
+				Rename-Item -Path $solutionFile.FullName -NewName "default.sln"
+			}
+		}
+		Remove-Item -Path $importRepoDirectory -Force -recurse
+	}
 }
 
 # File Uris
@@ -124,6 +210,16 @@ $addTeamCityTaskNameLogging = Get-BooleanValue -title "Continous Integration" -m
 $addOctopack = Get-BooleanValue -title "Continous Integration" -message "Add Octopack msbuild parameters" -default $addOctopack
 $addUnitTests = Get-BooleanValue -title "Build Script" -message "Add unit tests task" -default $addUnitTests
 $addRebuildDatabase = Get-BooleanValue -title "Build Script" -message "Add rebuild database task" -default $addRebuildDatabase
+
+#Check for Import GitHub Repo
+$importTemplateRepo = Get-BooleanValue -title "Import GitHub" -message "Import GitHub Repo As Template" -default $importTemplateRepo
+if($importTemplateRepo)
+{
+	$repoAccoutName = Get-StringValue -title "GibHub Organization" -message "Enter GitHub Organization" -default $repoAccoutName
+	$repoName = Get-StringValue -title "GibHub Repo" -message "Enter Repo Name" -default $repoName
+	$repoBranch = Get-StringValue -title "GibHub Branch" -message "Enter Repo Branch" -default $repoBranch
+}
+
 
 $headerLine = "#######################################################";
 Write $headerLine
@@ -186,6 +282,13 @@ Add-Content -Path $buildScript -Value "# Script Functions" -Encoding Ascii | Out
 AppendContent -Message "Adding assembly info function to $buildScript"  -uri $scriptCreateCommonAssemblyInfoUri -buildScriptPath $buildScript -Enable
 AppendContent -Message "Adding create directory function to $buildScript"  -uri $scriptCreateDirectoryUri -buildScriptPath $buildScript -Enable
 AppendContent -Message "Adding delete function to $buildScript"  -uri $scriptDeleteDirectoryUri -buildScriptPath $buildScript -Enable
+
+#Pull GitHub starting point template
+if($importTemplateRepo)
+{
+	Copy-GithubRepository -Name $repoName -Author $repoAccoutName -Branch $repoBranch -SourceDirectory $srcPath
+}
+
 
 Write $headerLine
 WriteUriContent -Uri $usageUri
