@@ -4,11 +4,17 @@ param(
     [switch]$runOctoPack
 )
 
-$nugetPath = ".\src\.nuget\"
-if((Test-Path -Path "$nugetPath\nuget.exe") -eq $false){
-    Write-Host "Downloading nuget to $nugetPath"
-    New-Item -ItemType Directory -Path $nugetPath -Force | Out-Null
-    Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "$nugetPath\nuget.exe" | Out-Null
+$nugetDirectory = ".\src\.nuget"
+$nugetPath = Join-Path $nugetDirectory "nuget.exe"
+if((Test-Path -Path $nugetPath) -eq $false){
+    Write-Host "Downloading nuget to $nugetDirectory"
+    New-Item -ItemType Directory -Path $nugetDirectory -Force | Out-Null
+    Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile $nugetPath | Out-Null
+} else {
+    if(((Get-ChildItem $nugetPath).LastWriteTime - [DateTime]::Today).Days -lt 0){
+        Write-Host "Nuget daily check" -foreground Yellow
+        & $nugetPath update -self
+    }
 }
 
 $psakePath = ".\tools\psake\4.6.0\psake.psm1"
