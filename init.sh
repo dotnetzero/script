@@ -1,7 +1,7 @@
 #!/bin/bash
 
-gitattributesUrl="https://raw.githubusercontent.com/dotnetzero/script/master/components/gitattributes.tx
-gitignoreUrl="https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore "
+gitattributesUrl="https://raw.githubusercontent.com/dotnetzero/script/master/components/gitattributes.txt"
+gitignoreUrl="https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore"
 
 getInput () {
     message=$1
