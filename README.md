@@ -1,4 +1,4 @@
-# psakezero
+# dotnetzero
 
 [![Build status](https://ci.appveyor.com/api/projects/status/tafyfqtcuqvw4ft8/branch/master?svg=true)](https://ci.appveyor.com/project/motowilliams/script/branch/master)
 
@@ -31,9 +31,9 @@ init.ps1 takes some CLI observations from NPM and attempts to setup an initializ
 ## Installing
 
 ``` powershell
-Invoke-WebRequest psakezero.com | Invoke-Expression
+Invoke-WebRequest dotnetzero.com | Invoke-Expression
 ```
 
 ``` powershell
-iwr psakezero.com | iex
+iwr dotnetzero.com | iex
 ```
