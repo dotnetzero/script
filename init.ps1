@@ -82,7 +82,7 @@ function CreateDirectory($message, $path){
 }
 
 # File Uris
-$rootUri = "https://raw.githubusercontent.com/psakezero/script/$branch"
+$rootUri = "https://raw.githubusercontent.com/dotnetzero/script/$branch"
 $headerUri = "$rootUri/components/header"
 $licenseUri = "$rootUri/LICENSE"
 $usageUri = "$rootUri/components/usage"
