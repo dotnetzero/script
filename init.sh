@@ -1,7 +1,7 @@
 #!/bin/bash
 # bash <(curl -s http://localhost:8080/install.sh)
 
-gitattributesUrl="https://raw.githubusercontent.com/dotnetzero/script/master/components/gitattributes.txt"
+gitattributesUrl="https://raw.githubusercontent.com/dotnetzero/script/master/components/gitattributes.tx
 gitignoreUrl="https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore "
 
 getInput () {
