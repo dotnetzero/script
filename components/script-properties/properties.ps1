@@ -18,12 +18,11 @@ properties {
     $buildConfiguration = "Release"
     $buildPlatform = "Any CPU"
     $version = "1.0.0"
-    $runOctoPack = "false"
 
     # tools
     $nugetExe = "$sourceDirectory\.nuget\nuget.exe"
 
     # database
-    $databaseServer = "localhost\sqlexpress2014"
+    $databaseServer = "localhost\sqlexpress2016"
     $integratedSecurity = "Integrated Security=True"
 }

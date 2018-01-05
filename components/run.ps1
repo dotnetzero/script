@@ -17,7 +17,7 @@ if((Test-Path -Path $nugetPath) -eq $false){
     }
 }
 
-$psakePath = ".\tools\psake\4.6.0\psake.psm1"
+$psakePath = ".\tools\psake\4.7.0\psake.psm1"
 if((Test-Path -Path $psakePath) -eq $false){
     Write-Host "Psake module missing"
     Write-Host "Updating package provider"
@@ -33,6 +33,6 @@ Remove-Module [p]sake
 Import-Module $psakePath
 
 # call default.ps1 with properties
-Invoke-Psake -buildFile ".\default.ps1" -taskList $taskList -properties @{ "version" = $version; "runOctoPack" = $runOctoPack; }
+Invoke-Psake -buildFile ".\default.ps1" -taskList $taskList -properties @{ "version" = $version; }
 
 if($psake.build_success) { exit 0 } else { exit 1 }
