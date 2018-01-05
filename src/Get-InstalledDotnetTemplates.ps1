@@ -124,28 +124,30 @@ function Get-DotNetProjects {
 
     process {
         $projects = @{}
-
         $templates = Get-InstalledDotnetTemplates
-
+        $headerLine = ("-" * 64);
         do {
 
-            Write-Host -ForegroundColor Cyan ("-" * 64)
-            Write-Host -ForegroundColor Cyan "  Installed dotnet templates"
-            Write-Host -ForegroundColor Cyan ("-" * 64)
-            ($templates | Format-Table -HideTableHeaders -Property Index, Name | Out-String).Trim("`r`n") | Write-Host -ForegroundColor Cyan
-            Write-Host -ForegroundColor Cyan ("-" * 64)
+            Show-Message $headerLine
+            Show-Message "  Installed dotnet templates"
+            Show-Message $headerLine
+            ($templates | Format-Table -HideTableHeaders -Property Index, Name | Out-String).Trim("`r`n") | Show-Message
+            Show-Message $headerLine
 
             if ($projects.Count -gt 0) {
-                Write-Host -ForegroundColor Green ("-" * 64)
-                Write-Host -ForegroundColor Green $projects.Count "Selected Project(s)"
-                Write-Host -ForegroundColor Green ("-" * 64)
-                $projects.GetEnumerator() | ForEach-Object { Write-Host -ForegroundColor Green " -" $_.Name "`r`n  "  $_.Value.Name }
-                Write-Host -ForegroundColor Green ("-" * 64)
+                Show-Message $headerLine
+                Show-Message "  $($projects.Count) Selected Project(s)"
+                Show-Message $headerLine
+                $projects.GetEnumerator() | Sort-Object { $_.Name } | ForEach-Object {
+                    $message = " - $($_.Name) `r`n   $($_.Value.Name)"
+                    Show-Message $message 
+                }
+                Show-Message $headerLine
             }
 
             #capture user input
             $key = "(blank to quit/finish)"
-            $r = $host.ui.Prompt("Adding projects to your solution", "Select dotnet item to add to your solution", $key)
+            $r = $host.ui.Prompt("Adding projects to your solution", "Select dotnet item # to add to your solution", $key)
 
             $hasValue = $r[$key].Length -gt 0
 

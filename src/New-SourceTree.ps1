@@ -25,12 +25,15 @@ function New-SourceTree {
     $buildScript = Get-StringValue -Title "Build Script" -Message "Select Name" -Default $buildScript
     $addNugetPackageRestore = Get-BooleanValue -Title "Package Restore" -Message "Add nuget package restore task" -Default $addNugetPackageRestore
     $addUnitTests = Get-BooleanValue -Title "Build Script" -Message "Add unit tests task" -Default $addUnitTests
+    $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
 
     $regex = "[^\x30-\x39\x41-\x5A\x61-\x7A]+"
     $companyNameClean = $companyName -replace $regex, ""
     $productNameClean = $productName -replace $regex, ""
 
-    $headerLine = ("#" * 64);
+    $headerLine = ("-" * 64);
+    Show-Message $headerLine
+    Show-Message "  Source Tree Setup"
     Show-Message $headerLine
     Show-Message "Company Name: $companyName"
     Show-Message "Product Name: $productName"
@@ -93,7 +96,7 @@ function New-SourceTree {
     Expand-String $components_usage | Show-Message
     Show-Message $headerLine
 
-    if ( Get-BooleanValue -Title "dotnet Template" -Message "Add projects to $srcPath" -Default $true) {
+    if ($launchDotNetTemplate) {
         $dotNetProjects = Get-DotNetProjects
         $solutionFileName = "$companyNameClean.$productNameClean"
         New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
