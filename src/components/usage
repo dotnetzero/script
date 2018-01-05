@@ -1,3 +1,2 @@
-# You are now finished
-# To execute your build please run
-# .\run.ps1 your_task_name
+# To execute your build run the following
+> .\run.ps1 your_task_name
