@@ -1,3 +1,4 @@
+[CmdletBinding()]
 $dotnetTemplates = "$PSScriptRoot\src\Get-InstalledDotnetTemplates.ps1"
 $sourceScript = "$PSScriptRoot\src\New-SourceTree.ps1"
 $sourceBashScript = "$PSScriptRoot\src\init.sh"
@@ -13,6 +14,12 @@ $artifactBashScript = "$artifactScriptPath\init.sh"
 function Compress-ComponentScripts {
     $scriptBlock = $compressedHeader
 
+    Write-Verbose $scriptBlock  
+
+    # Add licence encoded data
+    $scriptBlock += "`r`n"
+    $scriptBlock += "`$components_license=`"$((Compress-String -StringContent (Get-Content -Raw -Path "$PSScriptRoot\LICENSE")))`""
+
     Get-ChildItem -Path $componentScriptDirectory -Recurse | `
         Where-Object { ! $_.PSIsContainer } | `
         ForEach-Object {
@@ -23,7 +30,6 @@ function Compress-ComponentScripts {
 
         $scriptBlock += "`r`n"
         $scriptBlock += "`$$($variableName)=`"$compressedData`""
-
     }
 
     return $scriptBlock
@@ -31,8 +37,10 @@ function Compress-ComponentScripts {
 
 New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
 
+# Build the powershell script
 Set-Content -Encoding Ascii -Path $artifactPSScript -Value $(Compress-ComponentScripts) -Force
 Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $sourceScript)
 Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $dotnetTemplates)
 
+# Build the bash script
 Set-Content -Encoding Ascii -Path $artifactBashScript -Value (Get-Content -Raw $sourceBashScript)
