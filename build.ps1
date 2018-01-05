@@ -1,0 +1,38 @@
+$dotnetTemplates = "$PSScriptRoot\src\Get-InstalledDotnetTemplates.ps1"
+$sourceScript = "$PSScriptRoot\src\New-SourceTree.ps1"
+$sourceBashScript = "$PSScriptRoot\src\init.sh"
+. $sourceScript
+
+$componentScriptDirectory = "$PSScriptRoot\src\components"
+$compressedHeader = "# Compressed artifacts"
+
+$artifactScriptPath = "$PSScriptRoot\artifacts\"
+$artifactPSScript = "$artifactScriptPath\init.ps1"
+$artifactBashScript = "$artifactScriptPath\init.sh"
+
+function Compress-ComponentScripts {
+    $scriptBlock = $compressedHeader
+
+    Get-ChildItem -Path $componentScriptDirectory -Recurse | `
+        Where-Object { ! $_.PSIsContainer } | `
+        ForEach-Object {
+ 
+        $variableName = "$($_.Directory.BaseName)_$($_.BaseName -replace "-", $null)" 
+        $stringData = Get-Content -Raw -Path $_.FullName
+        $compressedData = Compress-String -StringContent $stringData
+
+        $scriptBlock += "`r`n"
+        $scriptBlock += "`$$($variableName)=`"$compressedData`""
+
+    }
+
+    return $scriptBlock
+}
+
+New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
+
+Set-Content -Encoding Ascii -Path $artifactPSScript -Value $(Compress-ComponentScripts) -Force
+Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $sourceScript)
+Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $dotnetTemplates)
+
+Set-Content -Encoding Ascii -Path $artifactBashScript -Value (Get-Content -Raw $sourceBashScript)
