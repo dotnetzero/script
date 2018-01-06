@@ -46,7 +46,9 @@ function Compress-ComponentScripts {
     return $scriptBlock
 }
 
-Remove-Item -Force -Recurse -Path $artifactScriptPath
+if (Test-Path -Path $artifactScriptPath) {
+    Remove-Item -Force -Recurse -Path $artifactScriptPath
+}
 New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
 
 # Build the powershell script
