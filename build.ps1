@@ -5,11 +5,12 @@ param(
 )
 
 $dotnetTemplates = "$PSScriptRoot\src\Get-InstalledDotnetTemplates.ps1"
-$sourceScript = "$PSScriptRoot\src\New-SourceTree.ps1"
+$sourceScript = "$PSScriptRoot\src\functions\Compress-String.ps1"
 $sourceBashScript = "$PSScriptRoot\src\init.sh"
 . $sourceScript
 
 $componentScriptDirectory = "$PSScriptRoot\src\components"
+$functionScriptDirectory = "$PSScriptRoot\src\functions"
 $compressedHeader = "# Compressed artifacts"
 
 $artifactScriptPath = "$PSScriptRoot\artifacts\"
@@ -54,15 +55,29 @@ function Compress-ComponentScripts {
     return $scriptBlock
 }
 
-if (Test-Path -Path $artifactScriptPath) {
-    Remove-Item -Force -Recurse -Path $artifactScriptPath
+function Join-FunctionScripts {
+    $functionContent = "# Functions"
+    $functionContent += "`r`n"
+    Get-ChildItem -Path $functionScriptDirectory | Sort-Object FullName | ForEach-Object {
+        $functionContent += $(Get-Content -Raw -Path $_.FullName)
+    }
+    return $functionContent
 }
-New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
 
-# Build the powershell script
-Set-Content -Encoding Ascii -Path $artifactPSScript -Value $(Compress-ComponentScripts) -Force
-Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $sourceScript)
-Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $dotnetTemplates)
+function New-CompiledScrpt {
+    if (Test-Path -Path $artifactScriptPath) {
+        Remove-Item -Force -Recurse -Path $artifactScriptPath
+    }
+    New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
 
-# Build the bash script
-Set-Content -Encoding Ascii -Path $artifactBashScript -Value (Get-Content -Raw $sourceBashScript)
+    # Build the powershell script
+    Set-Content -Encoding Ascii -Path $artifactPSScript -Value $(Compress-ComponentScripts) -Force
+    Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Join-FunctionScripts)
+    # Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $sourceScript)
+    # Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $dotnetTemplates)
+
+    # Build the bash script
+    Set-Content -Encoding Ascii -Path $artifactBashScript -Value (Get-Content -Raw $sourceBashScript)
+}
+
+New-CompiledScrpt
