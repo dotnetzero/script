@@ -1,5 +1,6 @@
 [CmdletBinding()]
 param(
+    [string]$sha,
     [string]$version
 )
 
@@ -21,10 +22,17 @@ function Compress-ComponentScripts {
     Write-Verbose $scriptBlock  
 
     if ($version) {
-        # Add licence encoded data
-        $version = "Sha: $version"
+        # Add version info
+        $version = "Version: $version"
         $scriptBlock += "`r`n"
         $scriptBlock += "`$components_version=`"$((Compress-String -StringContent $version))`""
+    }
+
+    if ($sha) {
+        # Add source code sha
+        $sha = "Sha: $sha"
+        $scriptBlock += "`r`n"
+        $scriptBlock += "`$components_sha=`"$((Compress-String -StringContent $sha))`""
     }
 
     # Add licence encoded data
