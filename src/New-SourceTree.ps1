@@ -16,6 +16,7 @@ function New-SourceTree {
 
     Expand-String $components_header | Show-Message
     Expand-String $components_license | Show-Message
+    Expand-String $components_version | Show-Message
 
     $companyName = Get-StringValue -Title "Company Info" -Message "Select Name" -Default $companyName
     $productName = Get-StringValue -Title "Product Info" -Message "Select Name" -Default $productName

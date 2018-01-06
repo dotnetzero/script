@@ -1,4 +1,8 @@
 [CmdletBinding()]
+param(
+    [string]$version
+)
+
 $dotnetTemplates = "$PSScriptRoot\src\Get-InstalledDotnetTemplates.ps1"
 $sourceScript = "$PSScriptRoot\src\New-SourceTree.ps1"
 $sourceBashScript = "$PSScriptRoot\src\init.sh"
@@ -15,6 +19,13 @@ function Compress-ComponentScripts {
     $scriptBlock = $compressedHeader
 
     Write-Verbose $scriptBlock  
+
+    if ($version) {
+        # Add licence encoded data
+        $version = "Sha: $version"
+        $scriptBlock += "`r`n"
+        $scriptBlock += "`$components_version=`"$((Compress-String -StringContent $version))`""
+    }
 
     # Add licence encoded data
     $scriptBlock += "`r`n"
@@ -35,6 +46,7 @@ function Compress-ComponentScripts {
     return $scriptBlock
 }
 
+Remove-Item -Force -Recurse -Path $artifactScriptPath
 New-Item -ItemType Directory -Path $artifactScriptPath -Force | Out-Null
 
 # Build the powershell script
