@@ -23,6 +23,13 @@ function New-SourceTree {
     $srcPath = Get-StringValue -Title "Source Code" -Message "Select Directory" -Default $srcPath
     $artifactsPath = Get-StringValue -Title "Build Output" -Message "Select Directory" -Default $artifactsPath
     $toolsPath = Get-StringValue -Title "Tools" -Message "Select Directory" -Default $toolsPath
+
+    $taskRunner = Get-ChoiceValue -Title "Task Runner" -Message "Select Task Runner" -Options @( "Psake", "Cake" )
+    if (($taskRunner -eq "Psake") -or ($taskRunner -eq "Invoke-Build")) {
+        $buildScript = Get-StringValue -Title "Build Script" -Message "Select Name" -Default $buildScript
+        $addNugetPackageRestore = Get-BooleanValue -Title "Package Restore" -Message "Add nuget package restore task" -Default $addNugetPackageRestore
+    }
+
     $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
 
     if ($launchDotNetTemplate) {
@@ -54,12 +61,22 @@ function New-SourceTree {
     Set-Content -Encoding Ascii -Path "readme.md" -Value "`# $companyName"
     Add-Content -Encoding Ascii -Path "readme.md" -Value "`## $productName"
 
-    New-PsakeSetup -CompanyName $companyName -ProductName $productName `
-        -SrcPath $srcPath `
-        -ArtifactsPath $artifactsPath `
-        -Bootstrapscript $bootstrapscript `
-        -BuildScript $buildScript `
-        -AddNugetPackageRestore $addNugetPackageRestore
+    Show-Message "Configuring $taskRunner task runner"
+    switch ($taskRunner) {
+        "Psake" {
+            Show Message "Configuring $taskRunner"
+            New-PsakeSetup -CompanyName $companyName -ProductName $productName `
+                -SrcPath $srcPath `
+                -ArtifactsPath $artifactsPath `
+                -Bootstrapscript $bootstrapscript `
+                -BuildScript $buildScript `
+                -AddNugetPackageRestore $addNugetPackageRestore
+        }
+        "Cake" {
+            New-CakeSetup
+        }
+        Default {}
+    }
 
     Show-Message $headerLine
     Expand-String $components_usage | Show-Message
