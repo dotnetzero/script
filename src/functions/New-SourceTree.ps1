@@ -25,7 +25,6 @@ function New-SourceTree {
     $toolsPath = Get-StringValue -Title "Tools" -Message "Select Directory" -Default $toolsPath
     $buildScript = Get-StringValue -Title "Build Script" -Message "Select Name" -Default $buildScript
     $addNugetPackageRestore = Get-BooleanValue -Title "Package Restore" -Message "Add nuget package restore task" -Default $addNugetPackageRestore
-    $addUnitTests = Get-BooleanValue -Title "Build Script" -Message "Add unit tests task" -Default $addUnitTests
     $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
 
     $regex = "[^\x30-\x39\x41-\x5A\x61-\x7A]+"
@@ -82,7 +81,7 @@ function New-SourceTree {
     Add-Base64Content -Message "Adding package clean task to $buildScript" -base64Content $scripttasks_CleanPackages -buildScriptPath $buildScript -Enable:$addNugetPackageRestore
 
     # Unit Tests
-    Add-Base64Content -Message "Adding unit test task to $buildScript" -base64Content $scripttasks_UnitTest -buildScriptPath $buildScript -Enable:$addUnitTests
+    Add-Base64Content -Message "Adding unit test task to $buildScript" -base64Content $scripttasks_UnitTest -buildScriptPath $buildScript -Enable
 
     # Rebuild Database
     Add-Base64Content -Message "Adding database rebuild task to $buildScript" -base64Content $scriptRebuildDatabaseUri -buildScriptPath $buildScript -Enable:$addRebuildDatabase
