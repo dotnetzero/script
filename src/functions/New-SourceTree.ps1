@@ -32,6 +32,12 @@ function New-SourceTree {
     $companyNameClean = $companyName -replace $regex, ""
     $productNameClean = $productName -replace $regex, ""
 
+    if ($launchDotNetTemplate) {
+        $dotNetProjects = Get-DotNetProjects
+        $solutionFileName = "$companyNameClean.$productNameClean"
+        New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
+    }
+
     $headerLine = ("-" * 64);
     Show-Message $headerLine
     Show-Message "  Source Tree Setup"
@@ -96,10 +102,4 @@ function New-SourceTree {
     Show-Message $headerLine
     Expand-String $components_usage | Show-Message
     Show-Message $headerLine
-
-    if ($launchDotNetTemplate) {
-        $dotNetProjects = Get-DotNetProjects
-        $solutionFileName = "$companyNameClean.$productNameClean"
-        New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
-    }
 }
