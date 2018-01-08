@@ -61,10 +61,9 @@ function New-SourceTree {
     Set-Content -Encoding Ascii -Path "readme.md" -Value "`# $companyName"
     Add-Content -Encoding Ascii -Path "readme.md" -Value "`## $productName"
 
-    Show-Message "Configuring $taskRunner task runner"
     switch ($taskRunner) {
         "Psake" {
-            Show Message "Configuring $taskRunner"
+            Show-Message "Configuring $taskRunner task runner"
             New-PsakeSetup -CompanyName $companyName -ProductName $productName `
                 -SrcPath $srcPath `
                 -ArtifactsPath $artifactsPath `
@@ -73,6 +72,7 @@ function New-SourceTree {
                 -AddNugetPackageRestore $addNugetPackageRestore
         }
         "Cake" {
+            Show-Message "Configuring $taskRunner task runner"
             New-CakeSetup
         }
         Default {}
