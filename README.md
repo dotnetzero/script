@@ -14,19 +14,14 @@ init.ps1 takes some CLI observations from NPM and attempts to setup an initializ
 - [x] components to deploy into an artifacts directory
 - [x] permanent tools going into a tools directory
 - [x] using a file named default.ps1 as your primary build script
-- [x] prompts you for a few default tasks
-  - [x] optional CI task that you would use on your build server
-  - [x] optional TC tasks that added TeamCity blockOpened & blockClosed messages around each task
-  - [x] optional nuget package restore task
-  - [x] optional MSBuild octopack version of a compile task
-- [x] using a bootstrapper to help with setting up and calling psake
+- [x] asks if you want to use Psake or Cake Build
+- [x] using a bootstrapper to help with setting up and calling the task runner
 - [x] adds a .gitattributes file
 - [x] adds a .gitignore file (https://github.com/github/gitignore/blob/master/VisualStudio.gitignore)
 - [x] defaults to using Nuget Package Restore
 - [x] gets the latest version of Nuget and will update itself occasionally
-- [ ] updates nuget occasionally
+- [x] updates nuget occasionally
 - [x] creates a readme.md file
-- [ ] dynamically adds dependent tasks
 
 ## Installing
 
