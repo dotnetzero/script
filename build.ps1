@@ -22,23 +22,26 @@ function Compress-ComponentScripts {
 
     Write-Verbose $scriptBlock  
 
+    $scriptBlock += "`r`n"
+    $scriptBlock += "`$dotnetzero = New-Object -TypeName PSObject"
+
     if ($version) {
         # Add version info
         $version = "Version: $version"
         $scriptBlock += "`r`n"
-        $scriptBlock += "`$components_version=`"$((Compress-String -StringContent $version))`""
+        $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name components_version -Value `"$((Compress-String -StringContent $version))`""
     }
 
     if ($sha) {
         # Add source code sha
         $sha = "Sha: $sha"
         $scriptBlock += "`r`n"
-        $scriptBlock += "`$components_sha=`"$((Compress-String -StringContent $sha))`""
+        $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name components_sha -Value `"$((Compress-String -StringContent $sha))`""
     }
 
     # Add licence encoded data
     $scriptBlock += "`r`n"
-    $scriptBlock += "`$components_license=`"$((Compress-String -StringContent (Get-Content -Raw -Path "$PSScriptRoot\LICENSE")))`""
+    $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name components_license -Value `"$((Compress-String -StringContent (Get-Content -Raw -Path "$PSScriptRoot\LICENSE")))`""
 
     Get-ChildItem -Path $componentScriptDirectory -Recurse | `
         Where-Object { ! $_.PSIsContainer } | `
@@ -49,7 +52,7 @@ function Compress-ComponentScripts {
         $compressedData = Compress-String -StringContent $stringData
 
         $scriptBlock += "`r`n"
-        $scriptBlock += "`$$($variableName)=`"$compressedData`""
+        $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name $($variableName) -Value `"$compressedData`""
     }
 
     return $scriptBlock

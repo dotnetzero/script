@@ -1,2 +1,1 @@
-# To execute your build run the following
-> .\run.ps1 your_task_name
+To start the build execute the run.ps1 bootstrap script
