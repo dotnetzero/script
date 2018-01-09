@@ -1,4 +1,4 @@
-function Show-Message {
+function Show-Warning {
     [CmdletBinding()]
     param (
         [parameter(ValueFromPipeline)][string]$Message,
@@ -8,12 +8,13 @@ function Show-Message {
     $headerLine = ("-" * 64);
 
     if ($Header) {
-        Write-Host -ForegroundColor Green $headerLine
+        Write-Host -ForegroundColor Yellow $headerLine
         Write-Host "  " -NoNewline
     }
-    Write-Host -ForegroundColor Green $Message 
+    Write-Host -ForegroundColor Yellow $Message 
     
     if ($Header) {
-        Write-Host -ForegroundColor Green $headerLine 
+        Write-Host -ForegroundColor Yellow $headerLine 
     }
 }
+
