@@ -30,5 +30,13 @@ Invoke-WebRequest dotnetzero.com | Invoke-Expression
 ```
 
 ``` powershell
+Invoke-RestMethod dotnetzero.com | Invoke-Expression
+```
+
+``` powershell
 iwr dotnetzero.com | iex
+```
+
+``` powershell
+irm dotnetzero.com | iex
 ```
