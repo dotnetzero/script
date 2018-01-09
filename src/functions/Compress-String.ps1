@@ -1,7 +1,7 @@
 function Compress-String {
     [CmdletBinding()]
     param (
-        [string]$StringContent
+        [parameter(ValueFromPipeline)][string]$StringContent
     )
 
     process {

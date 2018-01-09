@@ -28,6 +28,7 @@ function Compress-ComponentScripts {
     if ($version) {
         # Add version info
         $version = "Version: $version"
+        Write-Host $version
         $scriptBlock += "`r`n"
         $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name components_version -Value `"$((Compress-String -StringContent $version))`""
     }
@@ -35,6 +36,7 @@ function Compress-ComponentScripts {
     if ($sha) {
         # Add source code sha
         $sha = "Sha: $sha"
+        Write-Host $sha
         $scriptBlock += "`r`n"
         $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name components_sha -Value `"$((Compress-String -StringContent $sha))`""
     }
