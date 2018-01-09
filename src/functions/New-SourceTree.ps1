@@ -14,9 +14,9 @@ function New-SourceTree {
 
     $gitignoreUri = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore"
 
-    Expand-String $components_header | Show-Message
-    Expand-String $components_license | Show-Message
-    "$(Expand-String $components_version) $(Expand-String $components_sha)" | Show-Message
+    Expand-String $dotnetzero.components_header | Show-Message
+    Expand-String $dotnetzero.components_license | Show-Message
+    "$(Expand-String $dotnetzero.components_version) $(Expand-String $dotnetzero.components_sha)" | Show-Message
 
     $companyName = Get-StringValue -Title "Company Info" -Message "Select Name" -Default $companyName
     $productName = Get-StringValue -Title "Product Info" -Message "Select Name" -Default $productName
@@ -50,10 +50,10 @@ function New-SourceTree {
     New-Directory "Tools Directory: $toolsPath" $toolsPath
 
     #Create gitattributes
-    Add-Base64Content -Message "Creating .gitattributes files" -base64Content $components_gitattributes -buildScriptPath ".\.gitattributes" -Enable
+    Add-Base64Content -Message "Creating .gitattributes file" -base64Content $dotnetzero.components_gitattributes -buildScriptPath ".\.gitattributes" -Enable
 
     #Create gitignore
-    Add-UriContent -Message "Creating .gitignore files" -uri $gitignoreUri -buildScriptPath ".\.gitignore" -Enable
+    Add-UriContent -Message "Creating .gitignore file" -uri $gitignoreUri -buildScriptPath ".\.gitignore" -Enable
     Add-Content -Path ".\.gitignore" -Value "tools/" -Encoding Ascii  | Out-Null
     Add-Content -Path ".\.gitignore" -Value "$srcPath/.nuget/nuget.exe" -Encoding Ascii | Out-Null
 
@@ -78,7 +78,6 @@ function New-SourceTree {
         Default {}
     }
 
-    Show-Message $headerLine
-    Expand-String $components_usage | Show-Message
-    Show-Message $headerLine
+    
+    Expand-String $dotnetzero.components_usage | Show-Message -Header
 }

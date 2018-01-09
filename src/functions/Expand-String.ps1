@@ -1,7 +1,7 @@
 function Expand-String {
     [CmdletBinding()]
     param (
-        [string]$Base64Content
+        [parameter(ValueFromPipeline)][string]$Base64Content
     )
 
     process {
