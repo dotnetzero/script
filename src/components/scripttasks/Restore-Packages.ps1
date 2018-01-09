@@ -1,3 +1,3 @@
 task Restore-Packages {
-    Exec { & $nugetExe "restore" $solutionFile }
+    Exec { & dotnet restore $solutionFile }
 }
