@@ -30,18 +30,18 @@ function New-SourceTree {
         $addNugetPackageRestore = Get-BooleanValue -Title "Package Restore" -Message "Add nuget package restore task" -Default $addNugetPackageRestore
     }
 
-    $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
-
-    if ($launchDotNetTemplate) {
-        $dotNetProjects = Get-DotNetProjects
-        $solutionFileName = "$($companyName | New-SafeName).$($productName | New-SafeName)"
-        New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
+    if ((Test-EnvironmentPath -Search "dotnet") -eq $true) {
+        $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
+        if ($launchDotNetTemplate) {
+            $dotNetProjects = Get-DotNetProjects
+            $solutionFileName = "$($companyName | New-SafeName).$($productName | New-SafeName)"
+            New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
+        }
+    } else {
+        Show-Warning -Message "You're missing features without the dotnet cli installed.`r`n  Visit https://docs.microsoft.com/en-us/dotnet/core/tools" -Header
     }
 
-    $headerLine = ("-" * 64);
-    Show-Message $headerLine
-    Show-Message "  Source Tree Setup"
-    Show-Message $headerLine
+    Show-Message "Source Tree Setup" -Header
     Show-Message "Company Name: $companyName"
     Show-Message "Product Name: $productName"
 
