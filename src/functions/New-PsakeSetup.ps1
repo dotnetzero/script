@@ -40,6 +40,8 @@ function New-PsakeSetup {
     }
 
     Add-Base64Content -Message "Adding compile task to $buildScript" -base64Content $dotnetzero.scripttasks_PlainCompile -buildScriptPath $BuildScript -Enable -Decode $packageRestoreToken
+    Add-Base64Content -Message "Adding npm install task to $buildScript" -base64Content $dotnetzero.scripttasks_NpmInstall -buildScriptPath $BuildScript -Enable
+    
     Add-Base64Content -Message "Adding assmebly info task to $buildScript" -base64Content $dotnetzero.scriptAssemblyInfoUri -buildScriptPath $BuildScript -Enable
 
     Add-Content -Path $buildScript -Value "# Script Functions" -Encoding Ascii | Out-Null

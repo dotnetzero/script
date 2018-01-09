@@ -15,13 +15,13 @@ function New-DotnetSolution {
             $SolutionName = (Split-Path -Path (Get-Location) -Leaf)
             Write-Host -ForegroundColor Yellow "Setting solution name to $SolutionName"
         }
-        
+
         # Create solution file
         if ((Test-Path -Path "$SourceDirectory\$SolutionName.sln") -eq $false) {
             Write-Verbose -Message "Creating solution file $SolutionName at from $SourceDirectory"
             dotnet new sln --name $SolutionName --output $SourceDirectory
         }
-        
+
         # Create projects
         $DotNetProjects.GetEnumerator() | Foreach-Object {
             $projectName = $_.Key
@@ -29,6 +29,24 @@ function New-DotnetSolution {
             $outputDirectory = "$SourceDirectory\$projectName"
             Write-Verbose -Message "Creating $projectName ($projectShortName) at $outputDirectory"
             dotnet new $projectShortName -o $outputDirectory
+        }
+
+        # Check for SPA projects and 'npm install' those
+        if (Test-EnvironmentPath "npm") {
+            $DotNetProjects.GetEnumerator() | Foreach-Object {
+                $projectName = $_.Key
+                $outputDirectory = "$SourceDirectory\$projectName"
+                if (Test-Path -Path "$outputDirectory\package.json") {
+                    Show-Message "Calling npm install from $outputDirectory"
+                    Write-Verbose -Message "Changing directories to $outputDirectory"
+                    Push-Location
+                    Set-Location -Path $outputDirectory
+                    Write-Verbose -Message "Calling npm install"
+                    npm install
+                    Pop-Location
+                    Write-Verbose -Message "Changing directories back to to $(Get-Location))"
+                }
+            }
         }
 
         # Use naming concention to add project references for test projects
@@ -51,17 +69,17 @@ function New-DotnetSolution {
             Write-Verbose -Message "Adding project $projectPath to solution file $SolutionPath"
             dotnet sln $SolutionPath add $projectPath
         }
-        
+
         # Not that everything has been established call the build command
         dotnet build "$SourceDirectory\$SolutionName.sln"
-        
+
         # and the test comamnd for our test project(s)
         $DotNetProjects.GetEnumerator() | Foreach-Object {
             $tags = $_.Value.Tags
             if ($tags -contains "test") {
                 $projectName = $_.Key
                 $testProject = "$SourceDirectory\$projectName"
-                dotnet test $testProject --no-build 
+                dotnet test $testProject --no-build
             }
         }
     }
