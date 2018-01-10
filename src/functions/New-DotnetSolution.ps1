@@ -35,7 +35,7 @@ function New-DotnetSolution {
         }
 
         # Check for SPA projects and 'npm install' those
-        $packageJsonFiles = Get-ChildItem -Recurse -Path $outputDirectory -Filter package.json
+        $packageJsonFiles = Get-ChildItem -Recurse -Path $SourceDirectory -Filter package.json
         if($packageJsonFiles.Count -gt 0){
             Write-Verbose -Message "SPA projects found"
             if (Test-EnvironmentPath "npm") {
