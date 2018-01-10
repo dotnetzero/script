@@ -7,6 +7,9 @@ function New-DotnetSolution {
     )
 
     process {
+
+        $buildPreventionIssues = @()    
+
         # Use incoming solution name of determine based on current directory name
         if ($SolutionName) {
             Write-Host -ForegroundColor Yellow "Using solution name $SolutionName"
@@ -32,20 +35,30 @@ function New-DotnetSolution {
         }
 
         # Check for SPA projects and 'npm install' those
-        if (Test-EnvironmentPath "npm") {
-            $DotNetProjects.GetEnumerator() | Foreach-Object {
-                $projectName = $_.Key
-                $outputDirectory = "$SourceDirectory\$projectName"
-                if (Test-Path -Path "$outputDirectory\package.json") {
-                    Show-Message "Calling npm install from $outputDirectory"
-                    Write-Verbose -Message "Changing directories to $outputDirectory"
-                    Push-Location
-                    Set-Location -Path $outputDirectory
-                    Write-Verbose -Message "Calling npm install"
-                    npm install
-                    Pop-Location
-                    Write-Verbose -Message "Changing directories back to to $(Get-Location))"
+        $packageJsonFiles = Get-ChildItem -Recurse -Path $outputDirectory -Filter package.json
+        if($packageJsonFiles.Count -gt 0){
+            Write-Verbose -Message "SPA projects found"
+            if (Test-EnvironmentPath "npm") {
+                $DotNetProjects.GetEnumerator() | Foreach-Object {
+                    $projectName = $_.Key
+                    $outputDirectory = "$SourceDirectory\$projectName"
+                    if (Test-Path -Path "$outputDirectory\package.json") {
+                        Show-Message "Calling npm install from $outputDirectory"
+                        Write-Verbose -Message "Changing directories to $outputDirectory"
+                        Push-Location
+                        Set-Location -Path $outputDirectory
+                        Write-Verbose -Message "Calling npm install"
+                        npm install
+                        Pop-Location
+                        Write-Verbose -Message "Changing directories back to to $(Get-Location))"
+                    }
                 }
+            }
+            else {
+                $errorMissingNpm = "npm not installed"
+                $buildPreventionIssues += $errorMissingNpm
+                Write-Verbose -Message $errorMissingNpm
+                Show-Warning -Header -Message "This solution appears to have at least one SPA application`r`n  However npm is not installed please visit https://nodejs.org"
             }
         }
 
@@ -70,17 +83,23 @@ function New-DotnetSolution {
             dotnet sln $SolutionPath add $projectPath
         }
 
-        # Not that everything has been established call the build command
-        dotnet build "$SourceDirectory\$SolutionName.sln"
+        if($buildPreventionIssues.Count -eq 0){
+            # Now that everything has been established call the build command
+            dotnet build "$SourceDirectory\$SolutionName.sln"
 
-        # and the test comamnd for our test project(s)
-        $DotNetProjects.GetEnumerator() | Foreach-Object {
-            $tags = $_.Value.Tags
-            if ($tags -contains "test") {
-                $projectName = $_.Key
-                $testProject = "$SourceDirectory\$projectName"
-                dotnet test $testProject --no-build
+            # and the test comamnd for our test project(s)
+            $DotNetProjects.GetEnumerator() | Foreach-Object {
+                $tags = $_.Value.Tags
+                if ($tags -contains "test") {
+                    $projectName = $_.Key
+                    $testProject = "$SourceDirectory\$projectName"
+                    dotnet test $testProject --no-build
+                }
             }
+        }
+        else {
+            Show-Warning "Could not build / test for the following reasons" -Header
+            $buildPreventionIssues | Foreach-Object { Show-Warning -Message "  - $($_)" }
         }
     }
 }
