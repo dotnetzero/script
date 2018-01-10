@@ -4,8 +4,12 @@ function Show-Message {
         [parameter(ValueFromPipeline)][string]$Message,
         [switch]$Header
     )
+
+    if([string]::IsNullOrWhiteSpace($message)){
+        return
+    }
     
-    $headerLine = ("-" * 64);
+    $headerLine = ("-" * 67);
 
     if ($Header) {
         Write-Host -ForegroundColor Green $headerLine

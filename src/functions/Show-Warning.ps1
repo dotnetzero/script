@@ -4,8 +4,12 @@ function Show-Warning {
         [parameter(ValueFromPipeline)][string]$Message,
         [switch]$Header
     )
-    
-    $headerLine = ("-" * 64);
+
+    if([string]::IsNullOrWhiteSpace($message)){
+        return
+    }
+
+    $headerLine = ("-" * 67);
 
     if ($Header) {
         Write-Host -ForegroundColor Yellow $headerLine
@@ -17,4 +21,3 @@ function Show-Warning {
         Write-Host -ForegroundColor Yellow $headerLine 
     }
 }
-
