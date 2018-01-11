@@ -1,6 +1,6 @@
 - task: dotNetCoreCLI@1
-  displayName: dotnet test
+  displayName: dotnet test __PROJECT_NAME__
   inputs:
     command: test
-    projects: "**/*Tests/*.csproj"
-    arguments: --configuration Release --logger "trx;LogFileName=$(Agent.TempDirectory)\\Results.trx" --no-build
+    projects: "__PROJECT_PATH__"
+    arguments: --configuration Release --logger "trx;LogFileName=$(Agent.TempDirectory)\\__PROJECT_NAME__.trx" --no-build

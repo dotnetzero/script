@@ -13,6 +13,7 @@ function New-SourceTree {
     )
 
     $gitignoreUri = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore"
+    $vstsYamlBuild = ".vsts-ci.yml"
 
     Expand-String $dotnetzero.components_header | Show-Message
     Expand-String $dotnetzero.components_license | Show-Message
@@ -30,14 +31,23 @@ function New-SourceTree {
         $addNugetPackageRestore = Get-BooleanValue -Title "Package Restore" -Message "Add nuget package restore task" -Default $addNugetPackageRestore
     }
 
+    $createVstsYamlBuild = $false
+    $dotNetProjects = @{}
     if ((Test-EnvironmentPath -Search "dotnet") -eq $true) {
         $launchDotNetTemplate = Get-BooleanValue -Title "Dotnet CLI Templating" -Message "Add .NET projects to the $srcPath directory via the dotnet cli" -Default $true
         if ($launchDotNetTemplate) {
+            $createVstsYamlBuild = Get-BooleanValue -Title "VSTS Build" -Message "Add a VSTS yaml build definition for this solution?" -Default $false
             $dotNetProjects = Get-DotNetProjects
             $solutionFileName = "$($companyName | New-SafeName).$($productName | New-SafeName)"
             New-DotnetSolution -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
         }
-    } else {
+        
+        if ($launchDotNetTemplate -and $createVstsYamlBuild) {
+            $yamlBuildDefinitino = New-VstsYamlBuild -DotNetProjects $dotNetProjects -SolutionName $solutionFileName -SourceDirectory $srcPath
+            Set-Content -Path ".\$vstsYamlBuild" -Value $yamlBuildDefinitino -Encoding Ascii | Out-Null
+        }
+    }
+    else {
         Show-Warning -Message "You're missing features without the dotnet cli installed.`r`n  Visit https://docs.microsoft.com/en-us/dotnet/core/tools" -Header
     }
 
@@ -46,6 +56,15 @@ function New-SourceTree {
     Show-Message "Product Name: $productName"
 
     New-Directory "Source Code Directory: $srcPath" $srcPath
+
+    if ($projects.Count -gt 0) {
+        Show-Message "Created $($projects.Count) .NET project(s)"
+    }
+
+    if ($createVstsYamlBuild) {
+        Show-Message "Created VSTS Yaml Build File: $vstsYamlBuild"
+    }
+
     New-Directory "Build output Directory: $artifactsPath" $artifactsPath
     New-Directory "Tools Directory: $toolsPath" $toolsPath
 

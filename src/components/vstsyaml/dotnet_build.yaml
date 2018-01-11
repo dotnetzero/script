@@ -2,6 +2,6 @@
   displayName: dotnet build
   inputs:
     command: build
-    projects: "src/Solution01.sln"
+    projects: "__SOLUTION_PATH__"
     arguments: --configuration Release
     

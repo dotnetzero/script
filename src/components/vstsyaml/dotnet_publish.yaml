@@ -1,6 +1,8 @@
 - task: dotNetCoreCLI@1
-  displayName: dotnet publish
+  displayName: dotnet publish __PROJECT_NAME__
   inputs:
     command: publish
-    arguments: --configuration Release --output $(Build.ArtifactStagingDirectory)
+    publishWebProjects: false
+    projects: "__PROJECT_PATH__"
+    arguments: --configuration Release --output "$(Build.ArtifactStagingDirectory)"
     zipAfterPublish: true
