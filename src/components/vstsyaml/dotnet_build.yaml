@@ -1,0 +1,7 @@
+- task: dotNetCoreCLI@1
+  displayName: dotnet build
+  inputs:
+    command: build
+    projects: "src/Solution01.sln"
+    arguments: --configuration Release
+    

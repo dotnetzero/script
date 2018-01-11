@@ -1,0 +1,5 @@
+- task: dotNetCoreCLI@1
+  displayName: dotnet restore
+  inputs:
+    command: restore
+    projects: "**/*.csproj"

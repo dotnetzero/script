@@ -1,0 +1,6 @@
+- task: publishBuildArtifacts@1
+  displayName: Publish Application Artifacts
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)
+    ArtifactName: drop
+    ArtifactType: Container
