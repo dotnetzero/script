@@ -5,18 +5,19 @@ param(
 )
 
 $dotnetTemplates = "$PSScriptRoot\src\Get-InstalledDotnetTemplates.ps1"
-$sourceScript = "$PSScriptRoot\src\functions\Compress-String.ps1"
+. "$PSScriptRoot\src\functions\Compress-String.ps1"
+. "$PSScriptRoot\src\functions\Set-BlankLine.ps1"
+
 $sourceBashScript = "$PSScriptRoot\src\init.sh"
-. $sourceScript
 
 $componentScriptDirectory = "$PSScriptRoot\src\components"
 $functionScriptDirectory = "$PSScriptRoot\src\functions"
-$compressedHeader = "# Compressed artifacts"
 
 $artifactScriptPath = "$PSScriptRoot\artifacts\"
 $artifactPSScript = "$artifactScriptPath\init.ps1"
 $artifactBashScript = "$artifactScriptPath\init.sh"
 
+$compressedHeader = "# Compressed artifacts"
 function Compress-ComponentScripts {
     $scriptBlock = $compressedHeader
 
@@ -57,14 +58,14 @@ function Compress-ComponentScripts {
         $scriptBlock += "`$dotnetzero | Add-Member -MemberType NoteProperty -Name $($variableName) -Value `"$compressedData`""
     }
 
-    return $scriptBlock
+    return $scriptBlock | Set-BlankLine -Count 0
 }
 
 function Join-FunctionScripts {
     $functionContent = "# Functions"
     $functionContent += "`r`n"
     Get-ChildItem -Path $functionScriptDirectory | Sort-Object FullName | ForEach-Object {
-        $functionContent += $(Get-Content -Raw -Path $_.FullName)
+        $functionContent += $(Get-Content -Raw -Path $_.FullName) | Set-BlankLine
     }
     return $functionContent
 }
@@ -78,8 +79,6 @@ function New-CompiledScrpt {
     # Build the powershell script
     Set-Content -Encoding Ascii -Path $artifactPSScript -Value $(Compress-ComponentScripts) -Force
     Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Join-FunctionScripts)
-    # Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $sourceScript)
-    # Add-Content -Encoding Ascii -Path $artifactPSScript -Value (Get-Content -Raw $dotnetTemplates)
 
     # Build the bash script
     Set-Content -Encoding Ascii -Path $artifactBashScript -Value (Get-Content -Raw $sourceBashScript)
